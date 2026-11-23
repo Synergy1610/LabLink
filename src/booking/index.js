@@ -16,21 +16,17 @@ export function readId(value) {
 }
 
 export function findCatalog(db, search, now, lab = '') {
-  const rows = db.prepare(`
-    SELECT r.*, s.id AS slot_id, s.starts_at, s.ends_at
+  return db.prepare(`
+    SELECT r.*, (
+      SELECT COUNT(*) FROM slots s
+      WHERE s.resource_id = r.id AND s.starts_at > ?
+        AND NOT EXISTS (SELECT 1 FROM bookings b WHERE b.slot_id = s.id)
+    ) AS available_slots
     FROM resources r
-    LEFT JOIN slots s ON s.resource_id = r.id AND s.starts_at > ?
-      AND NOT EXISTS (SELECT 1 FROM bookings b WHERE b.slot_id = s.id)
     WHERE instr(lower(r.name || ' ' || r.category || ' ' || r.department || ' ' || r.lab), lower(?)) > 0
       AND (? = '' OR r.lab = ?)
-    ORDER BY r.name, s.starts_at
+    ORDER BY r.name, r.id
   `).all(now, search, lab, lab);
-  const resources = new Map();
-  for (const { slot_id, starts_at, ends_at, ...resource } of rows) {
-    if (!resources.has(resource.id)) resources.set(resource.id, { ...resource, slots: [] });
-    if (slot_id !== null) resources.get(resource.id).slots.push({ id: slot_id, starts_at, ends_at });
-  }
-  return [...resources.values()];
 }
 
 export function findOpenResourceSlots(db, resourceId, now) {
@@ -77,7 +73,7 @@ function transaction(db, perform) {
   }
 }
 
-export function submitRequest(db, studentId, slotId, fields, clock) {
+export function submitRequest(db, studentId, slotId, fields, clock, { requestLimit } = {}) {
   const { projectDetails, requirements } = fields;
   const deadline = readDeadline(fields.deadlineDate, fields.deadlineTime);
   if (!projectDetails || projectDetails.length > 600 || requirements.length > 300 || deadline === null) {
@@ -85,6 +81,9 @@ export function submitRequest(db, studentId, slotId, fields, clock) {
   }
 
   return transaction(db, () => {
+    if (requestLimit && db.prepare('SELECT 1 FROM requests LIMIT 1 OFFSET ?').get(requestLimit - 1)) {
+      throw new BookingError(429, 'This demo has reached its request limit. Open a fresh private browsing session to start over.');
+    }
     const now = clock();
     const slot = findSlot(db, slotId);
     if (!slot) throw new BookingError(404, 'That slot does not exist.');

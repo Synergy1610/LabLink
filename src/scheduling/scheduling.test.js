@@ -48,6 +48,20 @@ test('equal counts use earliest deadline, then first submission', (t) => {
   assert.equal(rankSlotRequests(db, 1, now).reason, 'earliest_submission');
 });
 
+test('deadline sweep counts by finish time but returns the earliest eligible start', (t) => {
+  const db = fixture(t);
+  const addSlot = db.prepare('INSERT INTO slots (resource_id, starts_at, ends_at) VALUES (1, ?, ?)');
+  const long = addSlot.run(now + hour, now + day + 10 * hour).lastInsertRowid;
+  const short = addSlot.run(now + 2 * hour, now + 3 * hour).lastInsertRowid;
+  const shortRequest = addRequest(db, { deadline: now + day + 3 * hour });
+  const longRequest = addRequest(db, { deadline: now + day + 10 * hour });
+  const contenders = new Map(rankSlotRequests(db, 1, now).contenders.map((c) => [c.requestId, c]));
+  assert.equal(contenders.get(shortRequest).alternativeCount, 1);
+  assert.equal(contenders.get(shortRequest).earliestAlternative.id, short);
+  assert.equal(contenders.get(longRequest).alternativeCount, 2);
+  assert.equal(contenders.get(longRequest).earliestAlternative.id, long);
+});
+
 test('alternatives exclude bookings, other resources, the contested slot, and slots already starting', (t) => {
   const db = fixture(t);
   const addSlot = db.prepare('INSERT INTO slots (resource_id, starts_at, ends_at) VALUES (1, ?, ?)');

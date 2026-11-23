@@ -27,6 +27,29 @@ function explainRanking(first, second) {
   return 'earliest_submission';
 }
 
+function summarizeAlternatives(requests, slots) {
+  // Sweep by deadline: each slot becomes eligible once. Track earliest start
+  // separately, since a longer slot can start earlier but finish later.
+  slots.sort((a, b) => a.ends_at - b.ends_at);
+  requests.sort((a, b) => a.deadline - b.deadline);
+  let count = 0;
+  let earliest = null;
+  return requests.map((request) => {
+    while (count < slots.length && slots[count].ends_at <= request.deadline) {
+      const slot = slots[count++];
+      if (!earliest || slot.starts_at < earliest.starts_at
+        || (slot.starts_at === earliest.starts_at && slot.id < earliest.id)) earliest = slot;
+    }
+    return {
+      requestId: request.id,
+      deadline: request.deadline,
+      submittedAt: request.submitted_at,
+      alternativeCount: count,
+      earliestAlternative: earliest,
+    };
+  });
+}
+
 // Returns advisory facts only. An uncontested or unavailable slot has no recommendation.
 export function rankSlotRequests(db, slotId, now) {
   const requests = db.prepare(`
@@ -40,16 +63,7 @@ export function rankSlotRequests(db, slotId, now) {
 
   const latestDeadline = requests.reduce((latest, request) => Math.max(latest, request.deadline), requests[0].deadline);
   const openSlots = findOpenSlots(db, requests[0].resource_id, slotId, now, latestDeadline);
-  const contenders = requests.map((request) => {
-    const alternatives = openSlots.filter((slot) => slot.ends_at <= request.deadline);
-    return {
-      requestId: request.id,
-      deadline: request.deadline,
-      submittedAt: request.submitted_at,
-      alternativeCount: alternatives.length,
-      earliestAlternative: alternatives[0] ?? null,
-    };
-  }).sort(compare);
+  const contenders = summarizeAlternatives(requests, openSlots).sort(compare);
 
   const [first, second] = contenders;
   return {

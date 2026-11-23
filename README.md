@@ -46,6 +46,10 @@ Equipment is grouped by lab. **Details** expands the descriptions and capabiliti
 
 The Docker image starts only the public one-click demo. It listens on Cloud Run's assigned `PORT`, does not use private accounts or Gemini, and gives each browser an in-memory sandbox. Sandboxes reset after inactivity or when the service restarts; the demo is not for real bookings.
 
+The catalog counts available slots in SQLite instead of loading every slot. Conflict ranking sweeps candidate slots once in finish-time order while tracking the earliest eligible start, preserving the same booking rules. In a local synthetic benchmark with 4,000 added slots and 2,000 requests, both implementations returned identical rankings; median ranking time over five runs dropped from 343.7 ms to 3.4 ms.
+
+The hosted demo caches static assets for 15 minutes, keeps session pages out of caches, and uses a same-origin content security policy. Each sandbox is capped at 64 booking requests, including seeded requests, to bound memory use.
+
 From a clean clone in Cloud Shell, deploy to a billing-enabled project you control:
 
 ```sh

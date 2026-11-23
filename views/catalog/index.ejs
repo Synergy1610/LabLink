@@ -90,8 +90,8 @@
                 <% } %>
                 <h3><%= resource.name %></h3>
                 <div class="catalog-availability">
-                  <% if (resource.slots.length) { %>
-                    <p><%= resource.slots.length %> available <%= resource.slots.length === 1 ? 'slot' : 'slots' %></p>
+                  <% if (resource.available_slots) { %>
+                    <p><%= resource.available_slots %> available <%= resource.available_slots === 1 ? 'slot' : 'slots' %></p>
                     <% if (currentUser.role === 'student') { %>
                       <a class="button tonal" data-slot-dialog href="/requests/choose?resource=<%= resource.id %>" aria-label="Choose a slot for <%= resource.name %>">Choose a slot</a>
                     <% } %>

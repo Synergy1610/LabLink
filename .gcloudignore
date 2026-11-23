@@ -2,3 +2,4 @@
 .git
 .gcloudignore
 node_modules
+/image.png

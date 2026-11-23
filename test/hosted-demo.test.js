@@ -4,7 +4,7 @@ import test from 'node:test';
 import { createHostedDemo } from '../src/hosted-demo.js';
 
 test('the hosted demo keeps sample bookings separate between browsers', async (t) => {
-  const server = createHostedDemo().listen(0, '127.0.0.1');
+  const server = createHostedDemo({ requestLimit: 2 }).listen(0, '127.0.0.1');
   await once(server, 'listening');
   t.after(() => new Promise((resolve) => server.close(resolve)));
   const base = `http://127.0.0.1:${server.address().port}`;
@@ -39,13 +39,24 @@ test('the hosted demo keeps sample bookings separate between browsers', async (t
   const health = await actor('/healthz');
   assert.equal(health.html, 'ok');
   assert.deepEqual(health.response.headers.getSetCookie(), []);
+  const style = await actor('/styles.css');
+  assert.equal(style.response.status, 200);
+  assert.match(style.response.headers.get('cache-control'), /public, max-age=900/);
+  assert.deepEqual(style.response.headers.getSetCookie(), []);
   await signIn(actor, '2');
-  const { html: form } = await actor('/requests?slot=1&sample=1');
-  const request = await actor('/requests', {
+  const { response: formResponse, html: form } = await actor('/requests?slot=1&sample=1');
+  assert.equal(formResponse.headers.get('cache-control'), 'no-store');
+  assert.match(formResponse.headers.get('content-security-policy'), /default-src 'self'.*frame-ancestors 'none'.*form-action 'self'/);
+  assert.equal(formResponse.headers.get('x-content-type-options'), 'nosniff');
+  const fields = {
     ...Object.fromEntries(['_csrf', 'slotId', 'deadlineDate', 'deadlineTime'].map((name) => [name, field(form, name)])),
     projectDetails: 'Browser A sandbox check',
-  });
+  };
+  const request = await actor('/requests', fields);
   assert.equal(request.response.status, 303);
+  const excess = await actor('/requests', fields);
+  assert.equal(excess.response.status, 429);
+  assert.match(excess.html, /demo has reached its request limit/);
 
   await signIn(actor, '3');
   assert.match((await actor('/faculty')).html, /Browser A sandbox check/);

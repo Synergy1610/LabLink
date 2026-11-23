@@ -14,7 +14,7 @@ function readField(body, key, limit) {
   return typeof value === 'string' ? value.trim().slice(0, limit + 1) : '';
 }
 
-export function requestRoutes(db, clock) {
+export function requestRoutes(db, clock, { requestLimit } = {}) {
   const router = Router();
   const student = requireRole('student');
 
@@ -112,7 +112,7 @@ export function requestRoutes(db, clock) {
       return showRequests(req, res, { slotId, fields, status: 400, error: 'Enter requirements as text.' });
     }
     try {
-      submitRequest(db, req.user.id, slotId, fields, clock);
+      submitRequest(db, req.user.id, slotId, fields, clock, { requestLimit });
       return res.redirect(303, '/requests');
     } catch (error) {
       if (!(error instanceof BookingError)) throw error;
