@@ -57,7 +57,16 @@ async function bookingFlow(t, firstApproval) {
   const filtered = await request('/catalog?q=power&lab=Electronics%20Lab', sam);
   const matches = await filtered.text();
   assert.match(matches, /Bench Power Supply/);
+  assert.match(matches, /src="\/equipment\/supply.webp"/);
+  assert.match(matches, /<dialog id="slot-dialog"/);
   assert.doesNotMatch(matches, /Digital Oscilloscope|Microcontroller Prototyping Kit/);
+  const availabilityPath = '/requests/choose?resource=1&format=json';
+  const availability = await request(availabilityPath, sam);
+  assert.equal(availability.status, 200);
+  const payload = await availability.json();
+  assert.equal(payload.name, 'Digital Oscilloscope');
+  assert.deepEqual(payload.dates[0], { date: '24/11/2026', slots: [{ id: 1, label: '17:30–19:30 IST' }] });
+  assert.equal((await request(availabilityPath)).status, 303);
   const picker = await request('/requests/choose?resource=1&date=24%2F11%2F2026', sam);
   assert.equal(picker.status, 200);
   const pickerHtml = await picker.text();

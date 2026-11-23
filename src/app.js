@@ -1,4 +1,5 @@
 import { fileURLToPath } from 'node:url';
+import { existsSync } from 'node:fs';
 import express from 'express';
 import { createGeminiClient } from './ai/client.js';
 import { createAuth } from './auth/index.js';
@@ -17,7 +18,12 @@ export function createApp({ db, authMode, clock = Date.now, gemini = createGemin
   const auth = createAuth({ db, mode: authMode });
   app.use(auth.loadSession, auth.verifyCsrf, auth.router);
 
-  app.get('/', (_req, res) => res.render('index'));
+  const schoolLogo = fileURLToPath(new URL('../data/greenwood-high-logo.webp', import.meta.url));
+  app.get('/branding/greenwood-high.webp', (_req, res, next) => {
+    if (!existsSync(schoolLogo)) return next();
+    return res.sendFile(schoolLogo);
+  });
+  app.get('/', (_req, res) => res.render('index', { hasSchoolLogo: existsSync(schoolLogo) }));
   if (db) app.use(catalogRoutes(db, clock, gemini), requestRoutes(db, clock), facultyRoutes(db, clock, gemini));
   app.use((_req, res) => res.status(404).type('text').send('Page not found.'));
   app.use((error, _req, res, next) => {

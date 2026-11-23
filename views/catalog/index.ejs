@@ -7,6 +7,7 @@
     <link rel="icon" href="/lablink.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/styles.css">
     <script src="/ai-status.js" defer></script>
+    <script src="/slot-dialog.js" defer></script>
   </head>
   <body>
     <%- include('../partials/nav', { page: 'catalog' }) %>
@@ -29,13 +30,15 @@
         </div>
       </form>
       <% if (currentUser.role === 'student') { %>
-        <details class="surface catalog-assist"<% if (project || message || matches !== null) { %> open<% } %>>
-          <summary>Find equipment with Gemini</summary>
+        <section class="surface catalog-assist" aria-labelledby="gemini-heading">
+          <p class="eyebrow">Project matching</p>
+          <h2 id="gemini-heading">Find equipment with Gemini</h2>
+          <p class="muted">Describe what you’re building to get suggestions from the lab catalog.</p>
           <form action="/catalog/match" method="post" class="stack" data-ai>
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-            <p><label for="project">Project description</label></p>
-            <p id="project-privacy">This optional feature sends your description to Gemini. Don’t include personal or confidential information.</p>
+            <label for="project">Project description</label>
             <textarea id="project" name="project" rows="4" required maxlength="<%= projectDescriptionLimit %>" aria-describedby="project-privacy"><%= project %></textarea>
+            <p class="muted field-hint" id="project-privacy">Your description is sent to Gemini. Don’t include personal or confidential information.</p>
             <button type="submit">Get AI suggestions</button>
             <span role="status" data-wait></span>
           </form>
@@ -43,15 +46,16 @@
           <% if (matches !== null) { %>
             <h3>Gemini suggestions</h3>
             <% if (matches.length) { %>
-              <ul>
+              <ul class="match-list">
                 <% for (const match of matches) { %>
-                  <li><a class="button outline" href="#resource-<%= match.resourceId %>"><%= match.name %></a> — <%= match.reason %></li>
+                  <li><div><strong><%= match.name %></strong><p><%= match.reason %></p></div>
+                    <a class="button outline" href="#resource-<%= match.resourceId %>" aria-label="View equipment: <%= match.name %>">View equipment</a></li>
                 <% } %>
               </ul>
               <p>Check the catalog below for actual availability. Faculty approval is still required.</p>
             <% } else { %><p>No suitable equipment was suggested. Try another description or search manually.</p><% } %>
           <% } %>
-        </details>
+        </section>
       <% } %>
       <% if (!resources.length) { %><p>No matching resources.</p><% } %>
       <div class="grid">
@@ -68,12 +72,29 @@
           <% if (resource.slots.length) { %>
             <p><%= resource.slots.length %> available <%= resource.slots.length === 1 ? 'slot' : 'slots' %></p>
             <% if (currentUser.role === 'student') { %>
-              <a class="button tonal" href="/requests/choose?resource=<%= resource.id %>" aria-label="Choose a slot for <%= resource.name %>">Choose a slot</a>
+              <a class="button tonal" data-slot-dialog href="/requests/choose?resource=<%= resource.id %>" aria-label="Choose a slot for <%= resource.name %>">Choose a slot</a>
             <% } %>
           <% } else { %><p>No available slots.</p><% } %>
         </article>
       <% } %>
       </div>
+      <% if (currentUser.role === 'student') { %>
+        <dialog id="slot-dialog" aria-labelledby="slot-dialog-heading">
+          <div class="dialog-heading">
+            <h2 id="slot-dialog-heading">Choose a slot</h2>
+            <button type="button" class="outline" data-close autofocus>Close</button>
+          </div>
+          <p class="muted" data-equipment></p>
+          <p role="status" data-slot-status></p>
+          <form class="stack" action="/requests" method="get" hidden>
+            <label for="dialog-date">Date (DD/MM/YYYY)</label>
+            <select id="dialog-date" required></select>
+            <label for="dialog-time">Available time (IST)</label>
+            <select id="dialog-time" name="slot" required disabled></select>
+            <button type="submit" disabled>Continue to booking</button>
+          </form>
+        </dialog>
+      <% } %>
     </main>
   </body>
 </html>

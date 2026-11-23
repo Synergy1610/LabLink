@@ -26,9 +26,9 @@
             <% } %>
           </div>
         </div>
-        <figure class="hero-photo">
-          <img src="/equipment/oscilloscope.webp" alt="Waveforms on a digital oscilloscope" width="500" height="576">
-          <figcaption>Digital oscilloscope · Electronics Lab</figcaption>
+        <figure class="hero-photo<%= hasSchoolLogo ? ' school-brand' : ' product-brand' %>">
+          <img src="<%= hasSchoolLogo ? '/branding/greenwood-high.webp' : '/lablink.svg' %>" alt="<%= hasSchoolLogo ? 'Greenwood High International School' : 'LabLink mark' %>" width="320" height="200">
+          <figcaption><%= hasSchoolLogo ? 'Unofficial hackathon prototype · Not affiliated with Greenwood High' : 'Campus lab resource-sharing prototype' %></figcaption>
         </figure>
       </section>
       <section class="home-section" aria-labelledby="featured-heading">

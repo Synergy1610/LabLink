@@ -13,20 +13,26 @@
       <p class="eyebrow"><%= demoMode ? 'Local sandbox' : 'Campus access' %></p>
       <h1>Your account</h1>
       <section class="surface">
-      <p>Signed in as <strong><%= currentUser.display_name %></strong> (<%= currentUser.role %>).</p>
-      <div class="actions">
-        <a class="button outline" href="/catalog">Browse equipment</a>
-        <% if (currentUser.role === 'student') { %><a class="button outline" href="/requests">My requests</a><% } %>
-        <% if (currentUser.role === 'faculty') { %><a class="button" href="/faculty">Booking Requests</a><% } %>
-      </div>
-      <% if (demoMode && currentUser.id === 2) { %>
-        <p><strong>Demo walkthrough:</strong> Request the first Digital Oscilloscope slot. Anika has already requested it.</p>
-        <p><a class="button" href="/requests?slot=1&amp;sample=1">Open demo booking</a></p>
-      <% } %>
-      <form method="post" action="/sign-out">
-        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-        <button type="submit">Sign out</button>
-      </form>
+        <div class="profile-heading">
+          <img src="/<%= currentUser.role === 'faculty' ? 'faculty' : 'student' %>-avatar.svg" alt="" width="72" height="72">
+          <div>
+            <h2><%= currentUser.display_name %></h2>
+            <p class="muted"><%= currentUser.role === 'faculty' ? 'Faculty' : 'Student' %></p>
+          </div>
+        </div>
+        <div class="actions account-actions">
+          <% if (currentUser.role === 'faculty') { %><a class="button" href="/faculty">Booking Requests</a><% } %>
+          <a class="button <%= currentUser.role === 'faculty' ? 'outline' : '' %>" href="/catalog">Browse equipment</a>
+          <% if (currentUser.role === 'student') { %><a class="button outline" href="/requests">My requests</a><% } %>
+          <form method="post" action="/sign-out">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <button class="outline" type="submit">Sign out</button>
+          </form>
+        </div>
+        <% if (demoMode && currentUser.id === 2) { %>
+          <p><strong>Demo walkthrough:</strong> Request the first Digital Oscilloscope slot. Anika has already requested it.</p>
+          <p><a class="button tonal" href="/requests?slot=1&amp;sample=1">Open demo booking</a></p>
+        <% } %>
       </section>
     </main>
   </body>

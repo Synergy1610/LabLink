@@ -32,6 +32,9 @@ export function requestRoutes(db, clock) {
       dates.get(start.deadlineDate).push({ id: slot.id, label: `${start.deadlineTime}–${endLabel} IST` });
     }
     const selectedDate = dates.has(req.query.date) ? req.query.date : '';
+    if (req.query.format === 'json') {
+      return res.json({ name: resource.name, dates: [...dates].map(([date, slots]) => ({ date, slots })) });
+    }
     return res.render('requests/choose', { resource, dates, selectedDate });
   });
 

@@ -56,7 +56,8 @@ test('demo sign-in rotates sessions, ignores submitted roles, and requires CSRF 
   assert.equal(account.status, 200);
   assert.equal(account.headers.get('cache-control'), 'no-store');
   const html = await account.text();
-  assert.match(html, /Anika Rao<\/strong> \(student\)/);
+  assert.match(html, /<h2>Anika Rao<\/h2>\s*<p class="muted">Student<\/p>/);
+  assert.match(html, /src="\/student-avatar.svg"/);
   assert.doesNotMatch(html, /\(faculty\)/);
   assert.equal((await post('/sign-out', cookie, { _csrf: csrf })).status, 403);
   const signedOut = await post('/sign-out', cookie, { _csrf: csrfFrom(html) });

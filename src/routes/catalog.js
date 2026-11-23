@@ -7,6 +7,12 @@ const photos = {
   1: { src: '/equipment/oscilloscope.webp', alt: 'Digital oscilloscope displaying several waveforms' },
   2: { src: '/equipment/kit.webp', alt: 'Arduino microcontroller board with USB connector and pin headers' },
   3: { src: '/equipment/workstation.webp', alt: 'Desktop workstation computers' },
+  4: { src: '/equipment/supply.webp', alt: 'Bench power supply with output terminals and adjustment knobs' },
+  5: { src: '/equipment/generator.webp', alt: 'Function generator with waveform controls' },
+  6: { src: '/equipment/analyzer.webp', alt: 'Logic analyzer with a display and control panel' },
+  7: { src: '/equipment/solder.webp', alt: 'Soldering station with an iron in its stand' },
+  8: { src: '/equipment/printer.webp', alt: 'Open-frame Prusa i3 3D printer' },
+  9: { src: '/equipment/caliper.webp', alt: 'Digital caliper with a sliding jaw and LCD display' },
 };
 
 const photoFor = (id) => photos[id];

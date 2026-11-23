@@ -60,7 +60,9 @@ test('catalog matching renders known results and preserves search when Gemini is
   const successful = await match('Measure pulses');
   assert.equal(successful.status, 200);
   const html = await successful.text();
-  assert.match(html, /href="#resource-1">Digital Oscilloscope/);
+  assert.match(html, /<h2 id="gemini-heading">Find equipment with Gemini<\/h2>/);
+  assert.match(html, /<strong>Digital Oscilloscope<\/strong>/);
+  assert.match(html, /href="#resource-1" aria-label="View equipment: Digital Oscilloscope">View equipment<\/a>/);
   assert.match(html, /Measure pulses &lt;b&gt;directly&lt;\/b&gt;/);
   assert.match(html, /href="\/requests\/choose\?resource=1"/);
 

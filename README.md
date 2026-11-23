@@ -20,7 +20,9 @@ Open <http://127.0.0.1:3000/sign-in>. There are no credentials to enter. **Switc
 3. Use **Switch role → Try as Faculty · Dr. Mira Patel**, then open **Booking Requests**. LabLink recommends Anika because she has **0** alternatives and Sam has **2**. If Gemini is configured, try **Explain with Gemini** before approving.
 4. Approve Anika. Switch back to Sam and open **My requests**. It shows **Slot taken** and offers the earliest viable alternative. Submitting it creates a new pending request.
 
-To browse independently, open **Catalog** and filter the nine resources by lab and search term. Open **Choose a slot** on a resource, select a date and its available time (IST), then continue to the booking form.
+To browse independently, open **Catalog** and filter the nine resources by lab and search term. **Choose a slot** opens a dialog; select a date and an available time (IST), then continue to the booking form. A standalone picker works without JavaScript. **Find equipment with Gemini** is visible above the inventory when signed in as a student.
+
+The homepage uses the LabLink mark by default. For a local preview, place an authorized Greenwood High WebP logo at `data/greenwood-high-logo.webp`. The app labels the preview as unofficial; the logo is not bundled or tracked. Do not redistribute it without permission.
 
 ## Normal mode: college ID and password
 
