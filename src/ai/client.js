@@ -7,7 +7,7 @@ export function createGeminiClient({
   apiKey = process.env.GEMINI_API_KEY,
   model = process.env.GEMINI_MODEL,
   fetchImpl = globalThis.fetch,
-  timeoutMs = 8_000,
+  timeoutMs = 20_000,
 } = {}) {
   const key = apiKey?.trim();
   const modelId = model?.trim() || defaultGeminiModel;

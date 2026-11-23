@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { explainRecommendation, explanationFacts } from '../ai/explain.js';
+import { geminiFailureMessage } from '../ai/messages.js';
 import { requireRole } from '../auth/index.js';
 import { BookingError, decideRequest, findPendingRequests, formatTime, readId } from '../booking/index.js';
 import { formatSlotRange } from '../booking/time.js';
@@ -39,7 +40,7 @@ export function facultyRoutes(db, clock, gemini) {
       status = 409;
     }
     return res.status(status).render('faculty/index', {
-      slotGroups, formatTime, formatSlotRange, error, now,
+      slotGroups, formatTime, formatSlotRange, geminiFailureMessage, error, now,
     });
   }
 

@@ -38,7 +38,7 @@
             <% if (aiExplanation?.ok) { %>
               <p role="status"><strong>Gemini explanation:</strong> <%= aiExplanation.text %></p>
             <% } else if (aiExplanation) { %>
-              <p role="status"><%= aiExplanation.reason === 'not_configured' ? 'Gemini is not configured.' : 'Gemini could not generate an explanation.' %> Use the rule-based explanation above.</p>
+              <p role="status"><%= geminiFailureMessage(aiExplanation.reason) %> Use the rule-based explanation above.</p>
             <% } %>
             </div>
           <% } %>

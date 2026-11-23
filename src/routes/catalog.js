@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { matchEquipment, projectDescriptionLimit } from '../ai/match.js';
+import { geminiFailureMessage } from '../ai/messages.js';
 import { requireRole } from '../auth/index.js';
 import { findCatalog } from '../booking/index.js';
 
@@ -50,9 +51,7 @@ export function catalogRoutes(db, clock, gemini) {
     const resources = db.prepare('SELECT id, name, department, lab, category, capabilities FROM resources ORDER BY id LIMIT 30').all();
     const result = await matchEquipment(gemini, project, resources);
     if (!result.ok) {
-      const message = result.reason === 'not_configured'
-        ? 'AI matching is not configured. You can still search the catalog below.'
-        : 'AI matching is temporarily unavailable. You can still search the catalog below.';
+      const message = `${geminiFailureMessage(result.reason)} You can still search the catalog below.`;
       return showCatalog(res, { ...filters, project, message });
     }
     return showCatalog(res, { ...filters, project, matches: result.matches });

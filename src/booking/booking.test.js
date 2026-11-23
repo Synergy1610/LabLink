@@ -129,11 +129,17 @@ async function bookingFlow(t, firstApproval) {
     assert.equal(facts.contenders[1].earliestAlternative.startsAt, 'Wed, 25/11/2026 · 17:30 IST');
     assert.equal(db.prepare('SELECT COUNT(*) AS count FROM bookings').get().count, 0);
 
-    for (const reason of ['not_configured', 'timeout']) {
+    for (const [reason, message] of [
+      ['not_configured', /Gemini is not configured/],
+      ['timeout', /Gemini took too long to respond/],
+      ['rate_limited', /Gemini is rate-limited/],
+    ]) {
       aiResult = { ok: false, reason };
       const fallback = await request(route, faculty, decisionFields);
       assert.equal(fallback.status, 200);
-      assert.match(await fallback.text(), /Use the rule-based explanation above/);
+      const fallbackHtml = await fallback.text();
+      assert.match(fallbackHtml, message);
+      assert.match(fallbackHtml, /Use the rule-based explanation above/);
     }
   }
   const approve = (id) => request(`/faculty/requests/${id}/approve`, faculty, decisionFields);

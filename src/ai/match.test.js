@@ -73,14 +73,22 @@ test('catalog matching renders known results and preserves search when Gemini is
   assert.match(filteredHtml, /href="\/catalog#resource-1"/);
   assert.doesNotMatch(filteredHtml, /id="resource-1"/);
 
-  for (const reason of ['not_configured', 'timeout']) {
+  for (const [reason, message] of [
+    ['not_configured', /Gemini is not configured/],
+    ['timeout', /Gemini took too long to respond/],
+    ['rate_limited', /Gemini is rate-limited/],
+    ['invalid_response', /response LabLink could not use/],
+    ['provider_error', /could not get a response from Gemini/],
+  ]) {
     result = { ok: false, reason };
     const fallback = await match('Measure pulses');
     assert.equal(fallback.status, 200);
-    assert.match(await fallback.text(), /You can still search the catalog below/);
+    const fallbackHtml = await fallback.text();
+    assert.match(fallbackHtml, message);
+    assert.match(fallbackHtml, /You can still search the catalog below/);
   }
 
   const search = await fetch(`${base}/catalog?q=workstation`, { headers: { cookie: session } });
   assert.match(await search.text(), /CAD Workstation/);
-  assert.equal(calls, 4);
+  assert.equal(calls, 7);
 });
