@@ -46,6 +46,8 @@ async function bookingFlow(t, firstApproval) {
   const guidedHtml = await guided.text();
   assert.match(guidedHtml, /Measure pulse timing from a sensor prototype/);
   assert.match(guidedHtml, /name="deadlineDate"[^>]*value="26\/11\/2026"/);
+  assert.match(guidedHtml, /Thu, 26\/11\/2026/);
+  assert.match(guidedHtml, /Tue, 24\/11\/2026 · 17:30–19:30 IST/);
   const catalog = await request('/catalog?q=Electrical%20Engineering', sam);
   assert.equal(catalog.status, 200);
   const catalogHtml = await catalog.text();
@@ -65,11 +67,12 @@ async function bookingFlow(t, firstApproval) {
   assert.equal(availability.status, 200);
   const payload = await availability.json();
   assert.equal(payload.name, 'Digital Oscilloscope');
-  assert.deepEqual(payload.dates[0], { date: '24/11/2026', slots: [{ id: 1, label: '17:30–19:30 IST' }] });
+  assert.deepEqual(payload.dates[0], { date: '24/11/2026', label: 'Tue, 24/11/2026', slots: [{ id: 1, label: '17:30–19:30 IST' }] });
   assert.equal((await request(availabilityPath)).status, 303);
   const picker = await request('/requests/choose?resource=1&date=24%2F11%2F2026', sam);
   assert.equal(picker.status, 200);
   const pickerHtml = await picker.text();
+  assert.match(pickerHtml, /<option value="24\/11\/2026" selected>Tue, 24\/11\/2026<\/option>/);
   assert.match(pickerHtml, /<option value="1">17:30–19:30 IST<\/option>/); // Pending does not hold a slot.
   assert.doesNotMatch(pickerHtml.split('<template')[0], /<option value="2">/);
 
@@ -98,6 +101,8 @@ async function bookingFlow(t, firstApproval) {
   assert.match(queueHtml, /fewest other available slots/);
   assert.match(queueHtml, /Viable alternatives before deadline:<\/strong> 0/);
   assert.match(queueHtml, /Viable alternatives before deadline:<\/strong> 2/);
+  assert.match(queueHtml, /Tue, 24\/11\/2026 · 17:30–19:30 IST/);
+  assert.match(queueHtml, /Faculty mode/);
   const decisionFields = { _csrf: await csrfFrom(queue) };
   if (firstApproval === 1) {
     assert.equal(aiRequests.length, 0); // Loading the queue does not call Gemini.
@@ -117,7 +122,7 @@ async function bookingFlow(t, firstApproval) {
     assert.equal(facts.reason, 'fewest_alternatives');
     assert.deepEqual(facts.contenders.map(({ viableAlternativeCount }) => viableAlternativeCount), [0, 2]);
     assert.equal(facts.contenders[0].earliestAlternative, null);
-    assert.equal(facts.contenders[1].earliestAlternative.startsAt, '25/11/2026, 17:30 IST');
+    assert.equal(facts.contenders[1].earliestAlternative.startsAt, 'Wed, 25/11/2026 · 17:30 IST');
     assert.equal(db.prepare('SELECT COUNT(*) AS count FROM bookings').get().count, 0);
 
     for (const reason of ['not_configured', 'timeout']) {

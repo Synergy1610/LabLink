@@ -16,6 +16,7 @@ const photos = {
 };
 
 const photoFor = (id) => photos[id];
+const readSearch = (value) => typeof value === 'string' ? value.trim().slice(0, 100) : '';
 
 export function catalogRoutes(db, clock, gemini) {
   const router = Router();
@@ -30,15 +31,15 @@ export function catalogRoutes(db, clock, gemini) {
   }
 
   router.get('/catalog', requireRole(), (req, res) => {
-    const search = typeof req.query.q === 'string' ? req.query.q.trim().slice(0, 100) : '';
-    return showCatalog(res, { search, lab: req.query.lab });
+    return showCatalog(res, { search: readSearch(req.query.q), lab: req.query.lab });
   });
 
   router.post('/catalog/match', requireRole('student'), async (req, res) => {
+    const filters = { search: readSearch(req.body?.q), lab: req.body?.lab };
     const project = typeof req.body?.project === 'string' ? req.body.project.trim() : '';
     if (!project || project.length > projectDescriptionLimit) {
       return showCatalog(res, {
-        status: 400, project: project.slice(0, projectDescriptionLimit),
+        ...filters, status: 400, project: project.slice(0, projectDescriptionLimit),
         message: `Enter a project description of up to ${projectDescriptionLimit} characters.`,
       });
     }
@@ -49,9 +50,9 @@ export function catalogRoutes(db, clock, gemini) {
       const message = result.reason === 'not_configured'
         ? 'AI matching is not configured. You can still search the catalog below.'
         : 'AI matching is temporarily unavailable. You can still search the catalog below.';
-      return showCatalog(res, { project, message });
+      return showCatalog(res, { ...filters, project, message });
     }
-    return showCatalog(res, { project, matches: result.matches });
+    return showCatalog(res, { ...filters, project, matches: result.matches });
   });
   return router;
 }

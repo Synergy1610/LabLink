@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { explainRecommendation, explanationFacts } from '../ai/explain.js';
 import { requireRole } from '../auth/index.js';
 import { BookingError, decideRequest, findPendingRequests, formatTime, readId } from '../booking/index.js';
+import { formatSlotRange } from '../booking/time.js';
 import { rankSlotRequests } from '../scheduling/index.js';
 
 const rankingReasons = {
@@ -38,7 +39,7 @@ export function facultyRoutes(db, clock, gemini) {
       status = 409;
     }
     return res.status(status).render('faculty/index', {
-      slotGroups, formatTime, error, now,
+      slotGroups, formatTime, formatSlotRange, error, now,
     });
   }
 

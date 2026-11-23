@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { requireRole } from '../auth/index.js';
-import { BookingError, findOpenResourceSlots, findSlot, findStudentRequests, formatTime, readId, submitRequest } from '../booking/index.js';
-import { formatDeadlineFields } from '../booking/time.js';
+import { BookingError, findOpenResourceSlots, findSlot, findStudentRequests, readId, submitRequest } from '../booking/index.js';
+import { formatDateLabel, formatDeadlineFields, formatSlotRange, readDeadline } from '../booking/time.js';
 import { findAlternatives } from '../scheduling/index.js';
 
 function lostSlot(request) {
@@ -26,14 +26,14 @@ export function requestRoutes(db, clock) {
     const dates = new Map();
     for (const slot of findOpenResourceSlots(db, id, clock())) {
       const start = formatDeadlineFields(slot.starts_at);
-      const end = formatDeadlineFields(slot.ends_at);
-      if (!dates.has(start.deadlineDate)) dates.set(start.deadlineDate, []);
-      const endLabel = end.deadlineDate === start.deadlineDate ? end.deadlineTime : `${end.deadlineDate}, ${end.deadlineTime}`;
-      dates.get(start.deadlineDate).push({ id: slot.id, label: `${start.deadlineTime}–${endLabel} IST` });
+      if (!dates.has(start.deadlineDate)) {
+        dates.set(start.deadlineDate, { date: start.deadlineDate, label: formatDateLabel(slot.starts_at), slots: [] });
+      }
+      dates.get(start.deadlineDate).slots.push({ id: slot.id, label: formatSlotRange(slot.starts_at, slot.ends_at, { includeDate: false }) });
     }
     const selectedDate = dates.has(req.query.date) ? req.query.date : '';
     if (req.query.format === 'json') {
-      return res.json({ name: resource.name, dates: [...dates].map(([date, slots]) => ({ date, slots })) });
+      return res.json({ name: resource.name, dates: [...dates.values()] });
     }
     return res.render('requests/choose', { resource, dates, selectedDate });
   });
@@ -67,8 +67,10 @@ export function requestRoutes(db, clock) {
       status = 404;
       error = 'That slot does not exist.';
     }
+    const deadline = readDeadline(fields.deadlineDate, '00:00');
     return res.status(status).render('requests/index', {
-      slot, error, fields, formatTime, now, requests,
+      slot, error, fields, formatSlotRange, now, requests,
+      deadlineLabel: deadline === null ? '' : formatDateLabel(deadline),
     });
   }
 

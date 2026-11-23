@@ -1,5 +1,6 @@
 // LabLink accepts Indian Standard Time (UTC+05:30) and stores epoch milliseconds.
 const istOffsetMs = 330 * 60_000;
+const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export function formatDeadlineFields(time) {
   const iso = new Date(time + istOffsetMs).toISOString();
@@ -8,8 +9,22 @@ export function formatDeadlineFields(time) {
 }
 
 export function formatTime(time) {
-  const { deadlineDate, deadlineTime } = formatDeadlineFields(time);
-  return `${deadlineDate}, ${deadlineTime} IST`;
+  return `${formatDateLabel(time)} · ${formatDeadlineFields(time).deadlineTime} IST`;
+}
+
+export function formatDateLabel(time) {
+  const weekday = weekdays[new Date(time + istOffsetMs).getUTCDay()];
+  return `${weekday}, ${formatDeadlineFields(time).deadlineDate}`;
+}
+
+export function formatSlotRange(start, end, { includeDate = true } = {}) {
+  const from = formatDeadlineFields(start);
+  const to = formatDeadlineFields(end);
+  if (from.deadlineDate !== to.deadlineDate) {
+    return `${formatDateLabel(start)} · ${from.deadlineTime} to ${formatDateLabel(end)} · ${to.deadlineTime} IST`;
+  }
+  const date = includeDate ? `${formatDateLabel(start)} · ` : '';
+  return `${date}${from.deadlineTime}–${to.deadlineTime} IST`;
 }
 
 export function readDeadline(date, time) {

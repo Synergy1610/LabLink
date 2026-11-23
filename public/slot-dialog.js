@@ -51,7 +51,7 @@ if (dialog && typeof dialog.showModal === 'function') {
         dates = available;
         equipment.textContent = name;
         status.textContent = dates.length ? '' : 'No slots are currently available for this equipment.';
-        date.replaceChildren(new Option('Select a date', ''), ...dates.map((day) => new Option(day.date, day.date)));
+        date.replaceChildren(new Option('Select a date', ''), ...dates.map((day) => new Option(day.label, day.date)));
         fillTimes();
         form.hidden = !dates.length;
       } catch {

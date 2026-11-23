@@ -2,7 +2,10 @@
 <% const activePage = typeof page === 'string' ? page : ''; %>
 <header class="topbar">
   <nav aria-label="Main navigation">
-    <a href="/" class="brand"><img src="/lablink.svg" alt="" width="32" height="32"> LabLink</a>
+    <div class="brand-group">
+      <a href="/" class="brand"><img src="/lablink.svg" alt="" width="32" height="32"> LabLink</a>
+      <% if (currentUser) { %><span class="role-label"><%= currentUser.role === 'faculty' ? 'Faculty mode' : 'Student mode' %></span><% } %>
+    </div>
     <% if (currentUser) { %>
       <a href="/catalog"<% if (activePage === 'catalog') { %> aria-current="page"<% } %>>Catalog</a>
       <% if (currentUser.role === 'student') { %><a href="/requests"<% if (activePage === 'requests') { %> aria-current="page"<% } %>>My requests</a><% } %>

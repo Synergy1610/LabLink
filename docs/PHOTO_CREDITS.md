@@ -14,4 +14,4 @@ These Wikimedia Commons photos are representative, not photographs of the actual
 | `public/equipment/printer.webp` | [Prusa i3 3D Printer](https://commons.wikimedia.org/wiki/File:Prusa_i3_3D_Printer_-_Reprap_-_Completed.jpg), John Abella | [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/) |
 | `public/equipment/caliper.webp` | [2020 Suwmiarka cyfrowa](https://commons.wikimedia.org/wiki/File:2020_Suwmiarka_cyfrowa.jpg), Jacek Halicki | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) |
 
-The student and faculty placeholder illustrations were made for LabLink. [Source Sans 3](https://fonts.google.com/specimen/Source+Sans+3) is self-hosted under the [SIL Open Font License](../public/fonts/OFL.txt).
+The student and faculty placeholder illustrations were made for LabLink. The site self-hosts [Source Sans 3](https://fonts.google.com/specimen/Source+Sans+3) and [Newsreader](https://fonts.google.com/specimen/Newsreader) under their respective SIL Open Font Licenses ([Source Sans 3](../public/fonts/OFL.txt), [Newsreader](../public/fonts/Newsreader-OFL.txt)).

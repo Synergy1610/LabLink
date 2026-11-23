@@ -61,10 +61,17 @@ test('catalog matching renders known results and preserves search when Gemini is
   assert.equal(successful.status, 200);
   const html = await successful.text();
   assert.match(html, /<h2 id="gemini-heading">Find equipment with Gemini<\/h2>/);
+  assert.match(html, /data-catalog-panel="catalog-ai" data-show-on-load/);
   assert.match(html, /<strong>Digital Oscilloscope<\/strong>/);
   assert.match(html, /href="#resource-1" aria-label="View equipment: Digital Oscilloscope">View equipment<\/a>/);
   assert.match(html, /Measure pulses &lt;b&gt;directly&lt;\/b&gt;/);
   assert.match(html, /href="\/requests\/choose\?resource=1"/);
+
+  const filteredMatch = await post('/catalog/match', session, { project: 'Measure pulses', q: 'CAD', _csrf });
+  const filteredHtml = await filteredMatch.text();
+  assert.match(filteredHtml, /Filters: “CAD”/);
+  assert.match(filteredHtml, /href="\/catalog#resource-1"/);
+  assert.doesNotMatch(filteredHtml, /id="resource-1"/);
 
   for (const reason of ['not_configured', 'timeout']) {
     result = { ok: false, reason };
@@ -75,5 +82,5 @@ test('catalog matching renders known results and preserves search when Gemini is
 
   const search = await fetch(`${base}/catalog?q=workstation`, { headers: { cookie: session } });
   assert.match(await search.text(), /CAD Workstation/);
-  assert.equal(calls, 3);
+  assert.equal(calls, 4);
 });

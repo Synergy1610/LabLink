@@ -6,6 +6,7 @@
     <title>My requests · LabLink</title>
     <link rel="icon" href="/lablink.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/styles.css">
+    <script src="/deadline-weekday.js" defer></script>
   </head>
   <body>
     <%- include('../partials/nav', { page: 'requests' }) %>
@@ -15,7 +16,7 @@
       <% if (slot) { %>
         <section class="surface" aria-labelledby="request-heading">
           <h2 id="request-heading">Request a slot for <%= slot.resource_name %></h2>
-          <p class="notice"><strong>Selected slot:</strong> <%= slot.department %> · <%= formatTime(slot.starts_at) %> to <%= formatTime(slot.ends_at) %></p>
+          <p class="notice"><strong>Selected slot:</strong> <%= formatSlotRange(slot.starts_at, slot.ends_at) %></p>
           <% if (slot.booking_id !== null || slot.starts_at <= now) { %>
             <p>This slot is no longer available.</p>
             <a class="button outline" href="/requests/choose?resource=<%= slot.resource_id %>">Choose another slot</a>
@@ -30,7 +31,8 @@
                 <legend>Project deadline (IST)</legend>
                 <p>Choose a deadline at or after the slot ends.</p>
                 <p><label for="deadline-date">Date (DD/MM/YYYY)</label><br>
-                <input id="deadline-date" name="deadlineDate" type="text" placeholder="DD/MM/YYYY" maxlength="10" pattern="[0-9]{2}/[0-9]{2}/[0-9]{4}" value="<%= fields.deadlineDate ?? '' %>" required></p>
+                 <input id="deadline-date" name="deadlineDate" type="text" placeholder="DD/MM/YYYY" maxlength="10" pattern="[0-9]{2}/[0-9]{2}/[0-9]{4}" value="<%= fields.deadlineDate ?? '' %>" aria-describedby="deadline-weekday" required>
+                 <small id="deadline-weekday" aria-live="polite"><%= deadlineLabel %></small></p>
                 <p><label for="deadline-time">Time (IST)</label><br>
                 <input id="deadline-time" name="deadlineTime" type="time" value="<%= fields.deadlineTime ?? '' %>" required></p>
               </fieldset>
@@ -45,13 +47,14 @@
       <% if (!requests.length) { %><p>No requests yet.</p><a class="button outline" href="/catalog">Find equipment to request</a><% } %>
       <% for (const request of requests) { %>
         <article class="surface">
-          <h3><%= request.resource_name %> · <%= formatTime(request.starts_at) %></h3>
+          <h3><%= request.resource_name %></h3>
+          <p class="slot-range"><%= formatSlotRange(request.starts_at, request.ends_at) %></p>
           <p><%= request.project_details %></p>
           <p><strong>Status:</strong> <span class="badge<%= request.slotTaken ? ' taken' : '' %>"><%= request.slotTaken && request.status === 'pending' ? 'Slot taken' : { pending: 'Pending', approved: 'Approved · Booking confirmed', declined: 'Declined' }[request.status] %></span></p>
           <% if (request.slotTaken) { %>
             <p>This slot is now booked by another request.</p>
             <% if (request.alternative) { %>
-              <p><strong>Earliest alternative:</strong> <%= formatTime(request.alternative.starts_at) %> to <%= formatTime(request.alternative.ends_at) %>.</p>
+               <p><strong>Earliest alternative:</strong> <%= formatSlotRange(request.alternative.starts_at, request.alternative.ends_at) %>.</p>
               <p><a class="button tonal" href="/requests?alternativeFor=<%= request.id %>">Request this alternative</a></p>
               <p>Requires faculty approval.</p>
             <% } else { %>

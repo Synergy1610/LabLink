@@ -23,8 +23,8 @@
             <label for="slot-date">Date (DD/MM/YYYY)</label>
             <select id="slot-date" name="date" required>
               <option value="">Select a date</option>
-              <% for (const date of dates.keys()) { %>
-                <option value="<%= date %>"<% if (date === selectedDate) { %> selected<% } %>><%= date %></option>
+              <% for (const { date, label } of dates.values()) { %>
+                <option value="<%= date %>"<% if (date === selectedDate) { %> selected<% } %>><%= label %></option>
               <% } %>
             </select>
             <button id="show-times" class="tonal" type="submit">Show available times</button>
@@ -33,13 +33,13 @@
               <label for="slot-time">Available time slots (IST)</label>
               <select id="slot-time" name="slot" required>
                 <option value="">Select a time slot</option>
-                <% for (const { id, label } of dates.get(selectedDate) ?? []) { %>
+                <% for (const { id, label } of dates.get(selectedDate)?.slots ?? []) { %>
                   <option value="<%= id %>"><%= label %></option>
                 <% } %>
               </select>
               <button type="submit">Continue to booking</button>
             </form>
-            <% for (const [date, slots] of dates) { %>
+            <% for (const { date, slots } of dates.values()) { %>
               <template data-slot-date="<%= date %>">
                 <% for (const { id, label } of slots) { %>
                   <option value="<%= id %>"><%= label %></option>

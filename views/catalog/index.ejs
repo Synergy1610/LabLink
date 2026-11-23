@@ -7,6 +7,7 @@
     <link rel="icon" href="/lablink.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/styles.css">
     <script src="/ai-status.js" defer></script>
+    <script src="/catalog-dialogs.js" defer></script>
     <script src="/slot-dialog.js" defer></script>
   </head>
   <body>
@@ -14,28 +15,41 @@
     <main id="content" class="flow">
       <h1>Equipment catalog</h1>
       <p class="muted">Browse lab equipment, development kits, and workstations across campus.</p>
-      <form action="/catalog" method="get" role="search" class="surface stack">
-        <div class="filter-grid">
-          <div><label for="search">Search equipment</label>
-          <input id="search" name="q" type="search" maxlength="100" value="<%= search %>" placeholder="Name, category, or department"></div>
-          <div><label for="lab">Lab</label>
-          <select id="lab" name="lab">
-            <option value="">All labs</option>
-            <% for (const name of labs) { %><option value="<%= name %>"<% if (name === lab) { %> selected<% } %>><%= name %></option><% } %>
-          </select></div>
-        </div>
-        <div class="actions">
+      <div class="actions catalog-toolbar">
+        <button type="button" class="tonal" data-open-catalog="catalog-filters" aria-haspopup="dialog" hidden>Use filters</button>
+        <% if (currentUser.role === 'student') { %>
+          <button type="button" data-open-catalog="catalog-ai" aria-haspopup="dialog" hidden>Find with AI</button>
+        <% } %>
+        <% if (search || lab) { %>
+          <span class="muted">Filters: <%= [search && `“${search}”`, lab].filter(Boolean).join(' · ') %></span>
+          <a href="/catalog">Clear filters</a>
+        <% } %>
+      </div>
+      <section class="surface" data-catalog-panel="catalog-filters" aria-labelledby="filters-heading">
+        <h2 id="filters-heading">Filter equipment</h2>
+        <form action="/catalog" method="get" role="search" class="stack">
+          <div>
+            <label for="search">Search equipment</label>
+            <input id="search" name="q" type="search" maxlength="100" value="<%= search %>" placeholder="Name, category, or department">
+          </div>
+          <div>
+            <label for="lab">Lab</label>
+            <select id="lab" name="lab">
+              <option value="">All labs</option>
+              <% for (const name of labs) { %><option value="<%= name %>"<% if (name === lab) { %> selected<% } %>><%= name %></option><% } %>
+            </select>
+          </div>
           <button type="submit">Apply filters</button>
-          <% if (search || lab) { %><a class="button outline" href="/catalog">Clear filters</a><% } %>
-        </div>
-      </form>
+        </form>
+      </section>
       <% if (currentUser.role === 'student') { %>
-        <section class="surface catalog-assist" aria-labelledby="gemini-heading">
-          <p class="eyebrow">Project matching</p>
+        <section class="surface catalog-assist" data-catalog-panel="catalog-ai"<% if (message || matches !== null) { %> data-show-on-load<% } %> aria-labelledby="gemini-heading">
           <h2 id="gemini-heading">Find equipment with Gemini</h2>
           <p class="muted">Describe what you’re building to get suggestions from the lab catalog.</p>
           <form action="/catalog/match" method="post" class="stack" data-ai>
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <input type="hidden" name="q" value="<%= search %>">
+            <input type="hidden" name="lab" value="<%= lab %>">
             <label for="project">Project description</label>
             <textarea id="project" name="project" rows="4" required maxlength="<%= projectDescriptionLimit %>" aria-describedby="project-privacy"><%= project %></textarea>
             <p class="muted field-hint" id="project-privacy">Your description is sent to Gemini. Don’t include personal or confidential information.</p>
@@ -49,7 +63,7 @@
               <ul class="match-list">
                 <% for (const match of matches) { %>
                   <li><div><strong><%= match.name %></strong><p><%= match.reason %></p></div>
-                    <a class="button outline" href="#resource-<%= match.resourceId %>" aria-label="View equipment: <%= match.name %>">View equipment</a></li>
+                    <a class="button outline" href="<%= resources.some((resource) => resource.id === match.resourceId) ? '' : '/catalog' %>#resource-<%= match.resourceId %>" aria-label="View equipment: <%= match.name %>">View equipment</a></li>
                 <% } %>
               </ul>
               <p>Check the catalog below for actual availability. Faculty approval is still required.</p>
@@ -58,9 +72,9 @@
         </section>
       <% } %>
       <% if (!resources.length) { %><p>No matching resources.</p><% } %>
-      <div class="grid">
+      <div class="grid catalog-grid">
       <% for (const resource of resources) { %>
-        <article class="resource" id="resource-<%= resource.id %>">
+        <article class="resource" id="resource-<%= resource.id %>" tabindex="-1">
           <% if (demoMode && photoFor(resource.id)) { %>
             <img src="<%= photoFor(resource.id).src %>" alt="<%= photoFor(resource.id).alt %>" loading="lazy" width="500" height="281">
             <small>Representative photo</small>
