@@ -4,19 +4,33 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Sign in · LabLink</title>
+    <link rel="stylesheet" href="/styles.css">
   </head>
   <body>
-    <main>
-      <h1>Sign in to LabLink</h1>
-      <p>Use one of the demo codes printed in the terminal where LabLink is running.</p>
+    <%- include('../partials/nav') %>
+    <main id="content" class="narrow">
+      <p class="eyebrow"><%= demoMode ? 'Local sandbox' : 'Campus access' %></p>
+      <h1><%= demoMode ? 'Choose a demo role' : 'Sign in to LabLink' %></h1>
       <% if (error) { %><p role="alert"><%= error %></p><% } %>
-      <form method="post" action="/sign-in">
-        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-        <label for="code">Demo sign-in code</label>
-        <input id="code" name="code" type="password" required maxlength="64" autocomplete="off">
-        <button type="submit">Sign in</button>
-      </form>
-      <p><a href="/">Back to LabLink</a></p>
+      <% if (demoMode) { %>
+        <p>No password needed. You can switch roles without losing the current demo bookings. Restart the demo to start over.</p>
+        <form method="post" action="/demo/sign-in" class="surface stack">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <% for (const user of personas) { %>
+            <button name="persona" value="<%= user.id %>" class="<%= user.role === 'faculty' ? 'tonal' : '' %>">Try as <%= user.role === 'faculty' ? 'Faculty' : 'Student' %> · <%= user.display_name %></button>
+          <% } %>
+        </form>
+      <% } else { %>
+        <p>Use your college ID and the LabLink-specific password from your account administrator.</p>
+        <form method="post" action="/sign-in" class="surface stack">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <label for="college-id">College ID</label>
+          <input id="college-id" name="collegeId" autocomplete="username" required maxlength="64">
+          <label for="password">LabLink password</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" required maxlength="128">
+          <button type="submit">Sign in</button>
+        </form>
+      <% } %>
     </main>
   </body>
 </html>

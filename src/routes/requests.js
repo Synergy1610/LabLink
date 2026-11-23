@@ -63,6 +63,16 @@ export function requestRoutes(db, clock) {
     if (req.query.slot !== undefined && slotId === null) {
       return showRequests(req, res, { status: 400, error: 'Invalid slot selection.' });
     }
+    if (res.locals.demoMode && req.user.id === 2 && slotId === 1 && req.query.sample === '1') {
+      const anchor = db.prepare('SELECT MAX(ends_at) AS end FROM slots WHERE resource_id = 1').get();
+      if (anchor.end !== null) {
+        return showRequests(req, res, { slotId, fields: {
+          projectDetails: 'Measure pulse timing from a sensor prototype.',
+          ...formatDeadlineFields(anchor.end + 60 * 60_000),
+          requirements: 'Waveform capture for measuring pulse timing.',
+        } });
+      }
+    }
     return showRequests(req, res, { slotId });
   });
 

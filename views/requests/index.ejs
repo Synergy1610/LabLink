@@ -4,14 +4,15 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>My requests · LabLink</title>
+    <link rel="stylesheet" href="/styles.css">
   </head>
   <body>
-    <nav aria-label="Main navigation"><a href="/">LabLink</a> <a href="/catalog">Equipment catalog</a> <a href="/account">Account</a></nav>
-    <main>
+    <%- include('../partials/nav') %>
+    <main id="content" class="narrow flow">
       <h1>My requests</h1>
       <% if (error) { %><p role="alert"><%= error %></p><% } %>
       <% if (slot) { %>
-        <section aria-labelledby="request-heading">
+        <section class="surface" aria-labelledby="request-heading">
           <h2 id="request-heading">Request a slot for <%= slot.resource_name %></h2>
           <p><%= slot.department %> · <%= formatTime(slot.starts_at) %> to <%= formatTime(slot.ends_at) %></p>
           <% if (slot.booking_id !== null || slot.starts_at <= now) { %>
@@ -41,15 +42,16 @@
       <h2>Request history</h2>
       <% if (!requests.length) { %><p>No requests yet. <a href="/catalog">Find equipment to request</a>.</p><% } %>
       <% for (const request of requests) { %>
-        <article>
+        <article class="surface">
           <h3><%= request.resource_name %> · <%= formatTime(request.starts_at) %></h3>
           <p><%= request.project_details %></p>
-          <p><strong>Status:</strong> <%= { pending: 'Pending', approved: 'Approved · Booking confirmed', declined: 'Declined' }[request.status] %></p>
+          <p><strong>Status:</strong> <span class="badge<%= request.slotTaken ? ' taken' : '' %>"><%= request.slotTaken && request.status === 'pending' ? 'Slot taken' : { pending: 'Pending', approved: 'Approved · Booking confirmed', declined: 'Declined' }[request.status] %></span></p>
           <% if (request.slotTaken) { %>
             <p>This slot is now booked by another request.</p>
             <% if (request.alternative) { %>
               <p><strong>Earliest alternative:</strong> <%= formatTime(request.alternative.starts_at) %> to <%= formatTime(request.alternative.ends_at) %>.</p>
-              <p><a href="/requests?alternativeFor=<%= request.id %>">Request this alternative</a> (requires faculty approval).</p>
+              <p><a class="button tonal" href="/requests?alternativeFor=<%= request.id %>">Request this alternative</a></p>
+              <p>Requires faculty approval.</p>
             <% } else { %>
               <p>No available alternative for this equipment before your project deadline.</p>
             <% } %>

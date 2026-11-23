@@ -21,8 +21,7 @@ function cookieFrom(response) {
 
 test('demo sign-in rotates sessions, ignores submitted roles, and requires CSRF for sign-out', async (t) => {
   const db = openDatabase(':memory:');
-  const codes = new Map();
-  const app = createApp({ db, reportDemoCode: (user, code) => codes.set(user.id, code) });
+  const app = createApp({ db, authMode: 'demo' });
   const server = app.listen(0, '127.0.0.1');
   await once(server, 'listening');
   t.after(async () => {
@@ -37,8 +36,6 @@ test('demo sign-in rotates sessions, ignores submitted roles, and requires CSRF 
     method: 'POST', headers: { cookie }, body: new URLSearchParams(fields), redirect: 'manual',
   });
 
-  assert.equal(codes.size, 3);
-  assert.equal(new Set(codes.values()).size, 3);
   const anonymousAccount = await get('/account');
   assert.equal(anonymousAccount.status, 303);
   assert.equal(anonymousAccount.headers.get('location'), '/sign-in');
@@ -46,10 +43,10 @@ test('demo sign-in rotates sessions, ignores submitted roles, and requires CSRF 
   const signIn = await get('/sign-in');
   const anonymousCookie = cookieFrom(signIn);
   const csrf = csrfFrom(await signIn.text());
-  assert.equal((await post('/sign-in', anonymousCookie, { code: codes.get(1) })).status, 403);
-  assert.equal((await post('/sign-in', anonymousCookie, { code: 'invalid', _csrf: csrf })).status, 401);
+  assert.equal((await post('/demo/sign-in', anonymousCookie, { persona: '1' })).status, 403);
+  assert.equal((await post('/demo/sign-in', anonymousCookie, { persona: 'invalid', _csrf: csrf })).status, 400);
 
-  const signedIn = await post('/sign-in', anonymousCookie, { code: codes.get(1), _csrf: csrf, role: 'faculty' });
+  const signedIn = await post('/demo/sign-in', anonymousCookie, { persona: '1', _csrf: csrf, role: 'faculty' });
   assert.equal(signedIn.status, 303);
   assert.equal(signedIn.headers.get('location'), '/account');
   const cookie = cookieFrom(signedIn);

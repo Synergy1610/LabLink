@@ -45,6 +45,9 @@ test('normal mode uses provisioned accounts, never trusts a submitted role and t
 
   const form = await request('/sign-in');
   const cookie = readCookie(form);
+  const loginHtml = await form.clone().text();
+  assert.match(loginHtml, /name="collegeId"/);
+  assert.doesNotMatch(loginHtml, /Try as Faculty|\/demo\/sign-in/);
   const _csrf = await readCsrf(form);
   const fields = { collegeId: 'Lab-001', password, _csrf, role: 'faculty' };
   assert.equal((await request('/demo/sign-in', cookie, { _csrf, persona: '3' })).status, 404);

@@ -75,7 +75,7 @@ The spec records a four-hour event, a working build target of **3h 15m–3h 30m*
 ## Dependencies & Setup
 
 - Node.js 26 and npm; no separate SQLite service or frontend build step. Commit the npm lockfile.
-- Final commands: `npm ci`, `npm run demo`, `npm start`, and `npm test`. Put the demo walkthrough first in the README and document provisioning and normal sign-in separately. Tests use isolated data. Until the sign-in screens are wired, the original startup codes remain available for local development.
+- Final commands: `npm ci`, `npm run demo`, `npm start`, and `npm test`. Put the demo walkthrough first in the README and document provisioning and normal sign-in separately. Tests use isolated data.
 - Optional: copy `.env.example` to ignored `.env` and set `GEMINI_API_KEY` and, if needed, `GEMINI_MODEL`. The server loads configuration locally; no private key goes to browser code.
 
 ## Risks & Assumptions

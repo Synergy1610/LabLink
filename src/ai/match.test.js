@@ -26,11 +26,10 @@ test('equipment matching discards unknown or duplicate IDs and uses canonical na
 test('catalog matching renders known results and preserves search when Gemini is unavailable', async (t) => {
   let calls = 0;
   let result = { ok: true, text: '[{"resourceId":1,"reason":"Measure pulses <b>directly</b>."}]' };
-  let code;
   const db = openDatabase(':memory:');
   const app = createApp({
     db,
-    reportDemoCode: (user, value) => { if (user.id === 2) code = value; },
+    authMode: 'demo',
     gemini: { generate: async () => { calls++; return result; } },
   });
   const server = app.listen(0, '127.0.0.1');
@@ -48,7 +47,7 @@ test('catalog matching renders known results and preserves search when Gemini is
   });
 
   const signIn = await fetch(`${base}/sign-in`);
-  const auth = await post('/sign-in', cookie(signIn), { code, _csrf: token(await signIn.text()) });
+  const auth = await post('/demo/sign-in', cookie(signIn), { persona: '2', _csrf: token(await signIn.text()) });
   assert.equal(auth.status, 303);
   const session = cookie(auth);
   const catalog = await fetch(`${base}/catalog`, { headers: { cookie: session } });

@@ -11,9 +11,9 @@ function token() {
   return randomBytes(32).toString('hex');
 }
 
-function sessionId(req) {
-  const cookie = (req.headers.cookie ?? '').split(';').find((part) => part.trim().startsWith(`${cookieName}=`));
-  const value = cookie?.trim().slice(cookieName.length + 1);
+function sessionId(req, name) {
+  const cookie = (req.headers.cookie ?? '').split(';').find((part) => part.trim().startsWith(`${name}=`));
+  const value = cookie?.trim().slice(name.length + 1);
   return /^[0-9a-f]{64}$/.test(value ?? '') ? value : undefined;
 }
 
@@ -31,30 +31,23 @@ export function requireRole(role) {
   };
 }
 
-export function createAuth({ db, mode = 'legacy', reportDemoCode = () => {}, clock = Date.now } = {}) {
-  if (!['legacy', 'normal', 'demo'].includes(mode)) throw new Error('Unknown LabLink sign-in mode.');
-  if (mode !== 'legacy' && !db) throw new Error('A database is required for this sign-in mode.');
-  if (mode === 'demo' && db.location() !== null) throw new Error('Demo sign-in requires an in-memory database.');
+export function createAuth({ db, mode = 'normal', clock = Date.now } = {}) {
+  if (!['normal', 'demo'].includes(mode)) throw new Error('Unknown LabLink sign-in mode.');
+  const demoMode = mode === 'demo';
+  if (demoMode && (!db || db.location() !== null)) throw new Error('Demo sign-in requires an in-memory database.');
+  const name = demoMode ? `${cookieName}_demo` : cookieName;
   const router = Router();
-  const codes = new Map();
   const sessions = new Map();
   const demoUsers = new Map();
   let attempts = 0;
   let windowEnds = 0;
 
-  if (mode !== 'normal') {
-    const users = db?.prepare(`
+  if (demoMode) {
+    const users = db.prepare(`
       SELECT u.id, u.display_name, u.role FROM users u
       WHERE NOT EXISTS (SELECT 1 FROM credentials c WHERE c.user_id = u.id) ORDER BY u.id
-    `).all() ?? [];
-    for (const user of users) {
-      if (mode === 'demo') demoUsers.set(String(user.id), user);
-      else {
-        const code = randomBytes(16).toString('hex');
-        codes.set(code, user);
-        reportDemoCode(user, code);
-      }
-    }
+    `).all();
+    for (const user of users) demoUsers.set(String(user.id), user);
   }
 
   function startSession(req, res, user = null) {
@@ -67,18 +60,20 @@ export function createAuth({ db, mode = 'legacy', reportDemoCode = () => {}, clo
     const id = token();
     const session = { user, csrfToken: token(), expiresAt: now + sessionTtl };
     sessions.set(id, session);
-    res.cookie(cookieName, id, { ...cookieOptions(req), maxAge: sessionTtl });
+    res.cookie(name, id, { ...cookieOptions(req), maxAge: sessionTtl });
     return session;
   }
 
   function loadSession(req, res, next) {
-    const id = sessionId(req);
+    const id = sessionId(req, name);
     const session = sessions.get(id);
     if (session && session.expiresAt <= Date.now()) sessions.delete(id);
     req.session = sessions.get(id) ?? null;
     req.user = req.session?.user ?? null;
     res.locals.currentUser = req.user;
     res.locals.csrfToken = req.session?.csrfToken ?? null;
+    res.locals.demoMode = demoMode;
+    res.locals.personas = [...demoUsers.values()];
     res.set('Cache-Control', 'no-store');
     next();
   }
@@ -94,28 +89,24 @@ export function createAuth({ db, mode = 'legacy', reportDemoCode = () => {}, clo
     return res.status(403).type('text').send('This form could not be verified. Reopen the page and try again.');
   }
 
-  router.get('/sign-in', (req, res) => {
-    if (req.user) return res.redirect(303, '/account');
+  function showLogin(req, res, status = 200, error = null) {
     const session = req.session ?? startSession(req, res);
-    return res.render('auth/sign-in', { csrfToken: session.csrfToken, error: null });
+    return res.status(status).render('auth/sign-in', { csrfToken: session.csrfToken, error });
+  }
+
+  router.get('/sign-in', (req, res) => {
+    if (req.user && !demoMode) return res.redirect(303, '/account');
+    return showLogin(req, res);
   });
 
   function signIn(req, res, user) {
     // Rotate the anonymous session and CSRF token on sign-in.
-    sessions.delete(sessionId(req));
+    sessions.delete(sessionId(req, name));
     startSession(req, res, user);
     return res.redirect(303, '/account');
   }
 
-  if (mode === 'legacy') router.post('/sign-in', (req, res) => {
-    if (req.user) return res.redirect(303, '/account');
-    const code = typeof req.body?.code === 'string' ? req.body.code.trim() : '';
-    const user = codes.get(code);
-    if (!user) return res.status(401).render('auth/sign-in', { error: 'That sign-in code is not valid.' });
-    return signIn(req, res, user);
-  });
-
-  if (mode === 'normal') router.post('/sign-in', async (req, res) => {
+  if (!demoMode && db) router.post('/sign-in', async (req, res) => {
     if (req.user) return res.redirect(303, '/account');
     // One shared limit for this loopback instance, independent of cookies or IDs.
     const now = clock();
@@ -123,26 +114,28 @@ export function createAuth({ db, mode = 'legacy', reportDemoCode = () => {}, clo
       attempts = 0;
       windowEnds = now + 60_000;
     }
-    if (attempts >= 8) return res.set('Retry-After', String(Math.ceil((windowEnds - now) / 1000)))
-      .status(429).type('text').send('Too many sign-in attempts. Try again in a minute.');
+    if (attempts >= 8) {
+      res.set('Retry-After', String(Math.ceil((windowEnds - now) / 1000)));
+      return showLogin(req, res, 429, 'Too many sign-in attempts. Try again in a minute.');
+    }
     attempts++;
     const user = await verifyCredentials(db, req.body?.collegeId, req.body?.password);
-    if (!user) return res.status(401).type('text').send('The college ID or password is incorrect.');
+    if (!user) return showLogin(req, res, 401, 'The college ID or password is incorrect.');
     return signIn(req, res, user);
   });
 
-  if (mode === 'demo') router.post('/demo/sign-in', (req, res) => {
+  if (demoMode) router.post('/demo/sign-in', (req, res) => {
     if (!['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress)) return res.sendStatus(404);
     const user = demoUsers.get(req.body?.persona);
-    if (!user) return res.status(400).type('text').send('Choose a listed demo persona.');
+    if (!user) return showLogin(req, res, 400, 'Choose a listed demo persona.');
     return signIn(req, res, user);
   });
 
   router.get('/account', requireRole(), (_req, res) => res.render('auth/account'));
 
   router.post('/sign-out', requireRole(), (req, res) => {
-    sessions.delete(sessionId(req));
-    res.clearCookie(cookieName, cookieOptions(req));
+    sessions.delete(sessionId(req, name));
+    res.clearCookie(name, cookieOptions(req));
     return res.redirect(303, '/');
   });
 

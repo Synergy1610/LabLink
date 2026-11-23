@@ -3,13 +3,21 @@ import { matchEquipment, projectDescriptionLimit } from '../ai/match.js';
 import { requireRole } from '../auth/index.js';
 import { findCatalog, formatTime } from '../booking/index.js';
 
+const photos = {
+  1: { src: '/equipment/oscilloscope.webp', alt: 'Digital oscilloscope displaying several waveforms' },
+  2: { src: '/equipment/kit.webp', alt: 'Arduino microcontroller board with USB connector and pin headers' },
+  3: { src: '/equipment/workstation.webp', alt: 'Desktop workstation computers' },
+};
+
+const photoFor = (id) => photos[id];
+
 export function catalogRoutes(db, clock, gemini) {
   const router = Router();
 
   function showCatalog(res, { search = '', project = '', matches = null, message = null, status = 200 } = {}) {
     return res.status(status).render('catalog/index', {
       search, project, matches, message, projectDescriptionLimit,
-      resources: findCatalog(db, search, clock()), formatTime,
+      resources: findCatalog(db, search, clock()), formatTime, photoFor,
     });
   }
 

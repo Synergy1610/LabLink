@@ -7,11 +7,10 @@ import { openDatabase } from '../db/index.js';
 async function bookingFlow(t, firstApproval) {
   const now = Date.UTC(2026, 10, 23, 12);
   const db = openDatabase(':memory:', { now });
-  const codes = new Map();
   const aiRequests = [];
   let aiResult = { ok: true, text: 'The recommended request has <zero> viable alternatives.' };
   const app = createApp({
-    db, clock: () => now, reportDemoCode: (user, code) => codes.set(user.id, code),
+    db, clock: () => now, authMode: 'demo',
     gemini: { generate: async (input) => { aiRequests.push(input); return aiResult; } },
   });
   const server = app.listen(0, '127.0.0.1');
@@ -36,16 +35,22 @@ async function bookingFlow(t, firstApproval) {
   });
   async function signIn(userId) {
     const form = await request('/sign-in');
-    const session = await request('/sign-in', cookieFrom(form), { code: codes.get(userId), _csrf: await csrfFrom(form) });
+    const session = await request('/demo/sign-in', cookieFrom(form), { persona: String(userId), _csrf: await csrfFrom(form) });
     assert.equal(session.status, 303);
     return cookieFrom(session);
   }
 
   const sam = await signIn(2);
+  const guided = await request('/requests?slot=1&sample=1', sam);
+  assert.equal(guided.status, 200);
+  const guidedHtml = await guided.text();
+  assert.match(guidedHtml, /Measure pulse timing from a sensor prototype/);
+  assert.match(guidedHtml, /name="deadlineDate"[^>]*value="26\/11\/2026"/);
   const catalog = await request('/catalog?q=Electrical%20Engineering', sam);
   assert.equal(catalog.status, 200);
   const catalogHtml = await catalog.text();
   assert.match(catalogHtml, /Digital Oscilloscope/);
+  assert.match(catalogHtml, /src="\/equipment\/oscilloscope.webp"/);
   assert.match(catalogHtml, /24\/11\/2026, 17:30 IST to 24\/11\/2026, 19:30 IST/);
   assert.doesNotMatch(catalogHtml, /CAD Workstation/);
   assert.match(catalogHtml, /href="\/requests\?slot=1"/); // A pending request does not hold the slot.

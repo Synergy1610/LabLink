@@ -6,7 +6,7 @@ import { catalogRoutes } from './routes/catalog.js';
 import { facultyRoutes } from './routes/faculty.js';
 import { requestRoutes } from './routes/requests.js';
 
-export function createApp({ db, authMode, reportDemoCode, clock = Date.now, gemini = createGeminiClient() } = {}) {
+export function createApp({ db, authMode, clock = Date.now, gemini = createGeminiClient() } = {}) {
   const app = express();
   app.disable('x-powered-by');
   app.set('view engine', 'ejs');
@@ -14,7 +14,7 @@ export function createApp({ db, authMode, reportDemoCode, clock = Date.now, gemi
   app.use(express.static(fileURLToPath(new URL('../public/', import.meta.url))));
   app.use(express.urlencoded({ extended: false, limit: '16kb', parameterLimit: 30 }));
 
-  const auth = createAuth({ db, mode: authMode, reportDemoCode });
+  const auth = createAuth({ db, mode: authMode });
   app.use(auth.loadSession, auth.verifyCsrf, auth.router);
 
   app.get('/', (_req, res) => res.render('index'));

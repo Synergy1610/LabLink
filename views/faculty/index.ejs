@@ -4,34 +4,40 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Faculty queue · LabLink</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/ai-status.js" defer></script>
   </head>
   <body>
-    <nav aria-label="Main navigation"><a href="/">LabLink</a> <a href="/catalog">Equipment catalog</a> <a href="/account">Account</a></nav>
-    <main>
+    <%- include('../partials/nav') %>
+    <main id="content" class="flow">
       <h1>Faculty queue</h1>
       <% if (error) { %><p role="alert"><%= error %></p><% } %>
       <% if (!slotGroups.length) { %><p>No pending requests.</p><% } %>
       <% for (const { requests, recommendation, aiExplanation } of slotGroups) { %>
         <% const slot = requests[0]; %>
-        <section aria-labelledby="slot-<%= slot.slot_id %>">
+        <section class="<%= recommendation ? 'conflict' : 'surface' %>" aria-labelledby="slot-<%= slot.slot_id %>">
           <h2 id="slot-<%= slot.slot_id %>"><%= slot.resource_name %></h2>
           <p><%= slot.department %> · <%= formatTime(slot.starts_at) %> to <%= formatTime(slot.ends_at) %></p>
           <% if (recommendation) { %>
+            <div class="recommendation">
             <p><strong>Recommended: <%= recommendation.winner.student_name %></strong></p>
             <p><strong>Rule-based explanation:</strong> <%= recommendation.reason %></p>
             <p>The recommendation does not reserve the slot; faculty make the final decision.</p>
-            <form method="post" action="/faculty/slots/<%= slot.slot_id %>/explain">
+            <form method="post" action="/faculty/slots/<%= slot.slot_id %>/explain" class="actions" data-ai>
               <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-              <button type="submit">Explain with Gemini</button>
+              <button type="submit" class="tonal">Explain with Gemini</button>
+              <span role="status" data-wait></span>
             </form>
             <% if (aiExplanation?.ok) { %>
               <p role="status"><strong>Gemini explanation:</strong> <%= aiExplanation.text %></p>
             <% } else if (aiExplanation) { %>
               <p role="status"><%= aiExplanation.reason === 'not_configured' ? 'Gemini is not configured.' : 'Gemini could not generate an explanation.' %> Use the rule-based explanation above.</p>
             <% } %>
+            </div>
           <% } %>
+          <div class="grid">
           <% for (const request of requests) { %>
-            <article>
+            <article class="surface">
               <h3><%= request.student_name %> · Request #<%= request.id %></h3>
               <% if (recommendation?.counts.has(request.id)) { %>
                 <p><strong>Viable alternatives before deadline:</strong> <%= recommendation.counts.get(request.id) %></p>
@@ -39,17 +45,18 @@
               <p><strong>Project:</strong> <%= request.project_details %></p>
               <p><strong>Deadline:</strong> <%= formatTime(request.deadline) %></p>
               <% if (request.requirements) { %><p><strong>Requirements:</strong> <%= request.requirements %></p><% } %>
-              <form method="post" action="/faculty/requests/<%= request.id %>/approve">
+              <form method="post" action="/faculty/requests/<%= request.id %>/approve" class="actions">
                 <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 <% if (request.booked_request_id === null && request.starts_at > now && request.ends_at <= request.deadline) { %>
                   <button type="submit" aria-label="Approve request <%= request.id %> from <%= request.student_name %>">Approve</button>
                 <% } else { %>
                   <p>This slot can no longer be approved.</p>
                 <% } %>
-                <button type="submit" formaction="/faculty/requests/<%= request.id %>/decline" aria-label="Decline request <%= request.id %> from <%= request.student_name %>">Decline</button>
+                <button class="outline" type="submit" formaction="/faculty/requests/<%= request.id %>/decline" aria-label="Decline request <%= request.id %> from <%= request.student_name %>">Decline</button>
               </form>
             </article>
           <% } %>
+          </div>
         </section>
       <% } %>
     </main>
