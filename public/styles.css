@@ -6,9 +6,9 @@
 }
 
 @font-face {
-  font-family: 'Newsreader';
-  src: url('/fonts/newsreader.woff2') format('woff2');
-  font-weight: 400 650;
+  font-family: 'Fraunces';
+  src: url('/fonts/fraunces.woff2') format('woff2');
+  font-weight: 600;
   font-display: swap;
 }
 
@@ -33,7 +33,7 @@
 body { margin: 0; overflow-wrap: anywhere; }
 main { width: min(calc(100% - 2rem), 74rem); margin: 0 auto; padding: clamp(1.25rem, 4vw, 3rem) 0 4rem; }
 main.narrow { max-width: 38rem; }
-h1, h2, h3 { font-family: 'Newsreader', Georgia, serif; font-weight: 600; color: var(--ink); line-height: 1.14; margin: 0 0 .65rem; }
+h1, h2, h3 { font-family: 'Fraunces', Georgia, serif; font-weight: 600; color: var(--ink); line-height: 1.14; margin: 0 0 .65rem; }
 h1 { font-size: clamp(2rem, 4vw, 2.75rem); letter-spacing: -.015em; }
 h2 { font-size: clamp(1.4rem, 2.3vw, 1.7rem); }
 h3 { font-size: 1.25rem; }
@@ -113,6 +113,7 @@ a { color: var(--forest); text-underline-offset: .18em; }
 .catalog-lab h2 { margin-block-end: .75rem; }
 .catalog-card { display: grid; align-content: start; gap: .75rem; }
 .catalog-card h3, .catalog-card p { margin: 0; }
+.catalog-card h3 { font-family: 'Source Sans 3', system-ui, sans-serif; font-weight: 700; }
 .catalog-availability { display: flex; flex-wrap: wrap; align-items: center; gap: var(--control-gap); }
 .equipment-details { color: var(--muted); font-size: .95rem; }
 .equipment-details summary { width: fit-content; min-height: 44px; align-content: center; padding-inline: .4rem; color: var(--forest); cursor: pointer; }

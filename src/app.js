@@ -19,7 +19,7 @@ export function createApp({ db, authMode, clock = Date.now, gemini = createGemin
   app.use(auth.loadSession, auth.verifyCsrf, auth.router);
 
   const schoolLogos = [
-    { name: 'Dartmouth College', key: 'dartmouth' },
+    { name: 'DPS Electronic City', key: 'dps-ecity' },
     { name: 'Greenwood High International School', key: 'greenwood-high' },
   ].map(({ name, key }) => ({
     name, src: `/branding/${key}.webp`, file: fileURLToPath(new URL(`../data/${key}-logo.webp`, import.meta.url)),
