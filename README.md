@@ -112,4 +112,4 @@ Tests use isolated databases and stub Gemini; no key or live network call is nee
 
 ## License
 
-This repository does not currently include an open-source license. Public visibility alone does not grant permission to reuse or redistribute the code. Add a license only after the project owner chooses one.
+Original LabLink code and documentation are available under the [MIT License](LICENSE). Third-party photos and fonts retain their respective licenses; see [photo and font credits](docs/PHOTO_CREDITS.md). Dependencies are governed by their own licenses.
