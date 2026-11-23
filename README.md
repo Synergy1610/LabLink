@@ -16,6 +16,14 @@
 - Optionally use Gemini for equipment matching and plain-language explanations; core booking works without AI.
 - Use passwordless demo personas or locally provisioned student and faculty accounts.
 
+## Screenshots
+
+Captured from the local one-click demo with fictional sample data. Select an image to view it at full size.
+
+| Equipment catalog | Student request form | Faculty conflict recommendation |
+|---|---|---|
+| [![LabLink equipment catalog showing sample resources grouped by lab](docs/screenshots/lablink-catalog.webp)](docs/screenshots/lablink-catalog.webp) | [![LabLink student request form for the Digital Oscilloscope](docs/screenshots/lablink-request.webp)](docs/screenshots/lablink-request.webp) | [![LabLink faculty queue recommending Anika with zero alternatives over Sam with two](docs/screenshots/lablink-faculty.webp)](docs/screenshots/lablink-faculty.webp) |
+
 ## Stack
 
 Node.js 26, Express 5, EJS, SQLite (`node:sqlite`), and plain CSS/JavaScript. No frontend build step or external database is required for local development.
