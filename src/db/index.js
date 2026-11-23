@@ -8,7 +8,7 @@ const defaultPath = fileURLToPath(new URL('../../data/lablink.sqlite', import.me
 const normalPath = fileURLToPath(new URL('../../data/normal.sqlite', import.meta.url));
 const schema = readFileSync(new URL('./schema.sql', import.meta.url), 'utf8');
 const credentialsSchema = readFileSync(new URL('./credentials.sql', import.meta.url), 'utf8');
-const schemaVersion = 3;
+const schemaVersion = 4;
 
 // Call once at startup. Tests can supply ':memory:' and a fixed clock.
 export function openDatabase(path = defaultPath, { now = Date.now(), includeDemo = true } = {}) {
@@ -28,8 +28,10 @@ export function openDatabase(path = defaultPath, { now = Date.now(), includeDemo
         throw new Error(`Unsupported LabLink database version: ${version}`);
       }
       if (version < 2) db.exec(credentialsSchema);
-      if (version < 3) {
-        expandCatalog(db, now);
+      if (version < 3) expandCatalog(db, now);
+      if (version < 4) {
+        db.prepare('UPDATE resources SET name = ? WHERE id = 2 AND name = ?')
+          .run('Microcontroller Kit', 'Microcontroller Prototyping Kit');
         db.exec(`PRAGMA user_version = ${schemaVersion}`);
       }
       db.exec('COMMIT');

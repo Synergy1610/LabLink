@@ -63,7 +63,7 @@ async function bookingFlow(t, firstApproval) {
   assert.match(matches, /<details class="equipment-details">\s*<summary aria-label="Details for Bench Power Supply">Details<\/summary>[\s\S]*?Capabilities:/);
   assert.match(matches, /src="\/equipment\/supply.webp"/);
   assert.match(matches, /<dialog id="slot-dialog"/);
-  assert.doesNotMatch(matches, /Digital Oscilloscope|Microcontroller Prototyping Kit/);
+  assert.doesNotMatch(matches, /Digital Oscilloscope|Microcontroller Kit/);
   const availabilityPath = '/requests/choose?resource=1&format=json';
   const availability = await request(availabilityPath, sam);
   assert.equal(availability.status, 200);

@@ -17,7 +17,7 @@ export function seedDatabase(db, now, includeDemo = true) {
   addResource.run(1, 'Digital Oscilloscope', 'Electrical Engineering', 'Equipment',
     'A bench instrument for measuring and debugging electronic signals.',
     'Four channels, waveform capture, signal timing');
-  addResource.run(2, 'Microcontroller Prototyping Kit', 'Computer Engineering', 'Development Kit',
+  addResource.run(2, 'Microcontroller Kit', 'Computer Engineering', 'Development Kit',
     'A starter kit for building sensor and embedded projects.',
     'Microcontroller board, breadboard, temperature and motion sensors');
   addResource.run(3, 'CAD Workstation', 'Mechanical Engineering', 'Workstation',

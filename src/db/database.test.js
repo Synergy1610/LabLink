@@ -18,6 +18,7 @@ test('upgrading a v2 database adds the lab catalog without changing existing boo
     legacy.exec(readFileSync(new URL('./schema.sql', import.meta.url), 'utf8'));
     legacy.exec(readFileSync(new URL('./credentials.sql', import.meta.url), 'utf8'));
     seedDatabase(legacy, now);
+    legacy.prepare('UPDATE resources SET name = ? WHERE id = 2').run('Microcontroller Prototyping Kit');
     legacy.prepare('INSERT INTO bookings (request_id, slot_id, faculty_id, approved_at) VALUES (1, 1, 3, ?)').run(now);
     legacy.exec("UPDATE requests SET status = 'approved' WHERE id = 1; PRAGMA user_version = 2");
   } finally {
@@ -26,7 +27,8 @@ test('upgrading a v2 database adds the lab catalog without changing existing boo
 
   const upgraded = openDatabase(path, { now: now + 60_000 });
   try {
-    assert.equal(upgraded.prepare('PRAGMA user_version').get().user_version, 3);
+    assert.equal(upgraded.prepare('PRAGMA user_version').get().user_version, 4);
+    assert.equal(upgraded.prepare('SELECT name FROM resources WHERE id = 2').get().name, 'Microcontroller Kit');
     assert.equal(upgraded.prepare('SELECT COUNT(*) AS n FROM resources').get().n, 9);
     assert.equal(upgraded.prepare('SELECT request_id FROM bookings WHERE slot_id = 1').get().request_id, 1);
     assert.equal(upgraded.prepare('SELECT status FROM requests WHERE id = 1').get().status, 'approved');
@@ -40,6 +42,7 @@ test('demo data has future, non-overlapping slots and a request with no viable a
   const db = openDatabase(':memory:', { now });
   t.after(() => db.close());
 
+  assert.equal(db.prepare('SELECT name FROM resources WHERE id = 2').get().name, 'Microcontroller Kit');
   assert.equal(db.prepare('SELECT COUNT(DISTINCT department) AS count FROM resources').get().count, 3);
   assert.deepEqual(db.prepare('SELECT COUNT(*) AS count FROM resources GROUP BY lab ORDER BY lab').all().map((row) => row.count), [3, 3, 3]);
   assert.equal(db.prepare('SELECT COUNT(*) AS count FROM users WHERE role = ?').get('student').count, 2);
