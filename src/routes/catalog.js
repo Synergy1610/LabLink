@@ -24,9 +24,12 @@ export function catalogRoutes(db, clock, gemini) {
   function showCatalog(res, { search = '', lab = '', project = '', matches = null, message = null, status = 200 } = {}) {
     const labs = db.prepare('SELECT DISTINCT lab FROM resources ORDER BY lab').all().map((row) => row.lab);
     if (!labs.includes(lab)) lab = '';
+    const resources = findCatalog(db, search, clock(), lab);
+    const labGroups = labs.map((name) => ({ name, resources: resources.filter((resource) => resource.lab === name) }))
+      .filter((group) => group.resources.length);
     return res.status(status).render('catalog/index', {
       search, lab, labs, project, matches, message, projectDescriptionLimit,
-      resources: findCatalog(db, search, clock(), lab), photoFor,
+      resources, labGroups, photoFor,
     });
   }
 

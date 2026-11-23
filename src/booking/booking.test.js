@@ -59,6 +59,8 @@ async function bookingFlow(t, firstApproval) {
   const filtered = await request('/catalog?q=power&lab=Electronics%20Lab', sam);
   const matches = await filtered.text();
   assert.match(matches, /Bench Power Supply/);
+  assert.match(matches, /<h2 id="catalog-lab-0">Electronics Lab<\/h2>/);
+  assert.match(matches, /<details class="equipment-details">\s*<summary aria-label="Details for Bench Power Supply">Details<\/summary>[\s\S]*?Capabilities:/);
   assert.match(matches, /src="\/equipment\/supply.webp"/);
   assert.match(matches, /<dialog id="slot-dialog"/);
   assert.doesNotMatch(matches, /Digital Oscilloscope|Microcontroller Prototyping Kit/);
