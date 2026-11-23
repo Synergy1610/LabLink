@@ -1,5 +1,6 @@
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { Router } from 'express';
+import { verifyCredentials } from './credentials.js';
 
 const cookieName = 'lablink_session';
 const sessionTtl = 4 * 60 * 60 * 1000;
@@ -30,15 +31,30 @@ export function requireRole(role) {
   };
 }
 
-export function createDemoAuth(users, reportDemoCode = () => {}) {
+export function createAuth({ db, mode = 'legacy', reportDemoCode = () => {}, clock = Date.now } = {}) {
+  if (!['legacy', 'normal', 'demo'].includes(mode)) throw new Error('Unknown LabLink sign-in mode.');
+  if (mode !== 'legacy' && !db) throw new Error('A database is required for this sign-in mode.');
+  if (mode === 'demo' && db.location() !== null) throw new Error('Demo sign-in requires an in-memory database.');
   const router = Router();
   const codes = new Map();
   const sessions = new Map();
+  const demoUsers = new Map();
+  let attempts = 0;
+  let windowEnds = 0;
 
-  for (const user of users) {
-    const code = randomBytes(16).toString('hex');
-    codes.set(code, user);
-    reportDemoCode(user, code);
+  if (mode !== 'normal') {
+    const users = db?.prepare(`
+      SELECT u.id, u.display_name, u.role FROM users u
+      WHERE NOT EXISTS (SELECT 1 FROM credentials c WHERE c.user_id = u.id) ORDER BY u.id
+    `).all() ?? [];
+    for (const user of users) {
+      if (mode === 'demo') demoUsers.set(String(user.id), user);
+      else {
+        const code = randomBytes(16).toString('hex');
+        codes.set(code, user);
+        reportDemoCode(user, code);
+      }
+    }
   }
 
   function startSession(req, res, user = null) {
@@ -84,18 +100,42 @@ export function createDemoAuth(users, reportDemoCode = () => {}) {
     return res.render('auth/sign-in', { csrfToken: session.csrfToken, error: null });
   });
 
-  router.post('/sign-in', (req, res) => {
-    if (req.user) return res.redirect(303, '/account');
-    const code = typeof req.body?.code === 'string' ? req.body.code.trim() : '';
-    const user = codes.get(code);
-    if (!user) {
-      return res.status(401).render('auth/sign-in', { error: 'That sign-in code is not valid.' });
-    }
-
+  function signIn(req, res, user) {
     // Rotate the anonymous session and CSRF token on sign-in.
     sessions.delete(sessionId(req));
     startSession(req, res, user);
     return res.redirect(303, '/account');
+  }
+
+  if (mode === 'legacy') router.post('/sign-in', (req, res) => {
+    if (req.user) return res.redirect(303, '/account');
+    const code = typeof req.body?.code === 'string' ? req.body.code.trim() : '';
+    const user = codes.get(code);
+    if (!user) return res.status(401).render('auth/sign-in', { error: 'That sign-in code is not valid.' });
+    return signIn(req, res, user);
+  });
+
+  if (mode === 'normal') router.post('/sign-in', async (req, res) => {
+    if (req.user) return res.redirect(303, '/account');
+    // One shared limit for this loopback instance, independent of cookies or IDs.
+    const now = clock();
+    if (now >= windowEnds) {
+      attempts = 0;
+      windowEnds = now + 60_000;
+    }
+    if (attempts >= 8) return res.set('Retry-After', String(Math.ceil((windowEnds - now) / 1000)))
+      .status(429).type('text').send('Too many sign-in attempts. Try again in a minute.');
+    attempts++;
+    const user = await verifyCredentials(db, req.body?.collegeId, req.body?.password);
+    if (!user) return res.status(401).type('text').send('The college ID or password is incorrect.');
+    return signIn(req, res, user);
+  });
+
+  if (mode === 'demo') router.post('/demo/sign-in', (req, res) => {
+    if (!['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress)) return res.sendStatus(404);
+    const user = demoUsers.get(req.body?.persona);
+    if (!user) return res.status(400).type('text').send('Choose a listed demo persona.');
+    return signIn(req, res, user);
   });
 
   router.get('/account', requireRole(), (_req, res) => res.render('auth/account'));

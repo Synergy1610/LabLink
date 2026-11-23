@@ -1,0 +1,6 @@
+CREATE TABLE credentials (
+  user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  college_id TEXT NOT NULL UNIQUE,
+  salt TEXT NOT NULL,
+  password_hash TEXT NOT NULL
+) STRICT;

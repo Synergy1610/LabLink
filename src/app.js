@@ -1,12 +1,12 @@
 import { fileURLToPath } from 'node:url';
 import express from 'express';
 import { createGeminiClient } from './ai/client.js';
-import { createDemoAuth } from './auth/index.js';
+import { createAuth } from './auth/index.js';
 import { catalogRoutes } from './routes/catalog.js';
 import { facultyRoutes } from './routes/faculty.js';
 import { requestRoutes } from './routes/requests.js';
 
-export function createApp({ db, reportDemoCode, clock = Date.now, gemini = createGeminiClient() } = {}) {
+export function createApp({ db, authMode, reportDemoCode, clock = Date.now, gemini = createGeminiClient() } = {}) {
   const app = express();
   app.disable('x-powered-by');
   app.set('view engine', 'ejs');
@@ -14,8 +14,7 @@ export function createApp({ db, reportDemoCode, clock = Date.now, gemini = creat
   app.use(express.static(fileURLToPath(new URL('../public/', import.meta.url))));
   app.use(express.urlencoded({ extended: false, limit: '16kb', parameterLimit: 30 }));
 
-  const demoUsers = db?.prepare('SELECT id, display_name, role FROM users ORDER BY id').all() ?? [];
-  const auth = createDemoAuth(demoUsers, reportDemoCode);
+  const auth = createAuth({ db, mode: authMode, reportDemoCode });
   app.use(auth.loadSession, auth.verifyCsrf, auth.router);
 
   app.get('/', (_req, res) => res.render('index'));

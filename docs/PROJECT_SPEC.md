@@ -83,6 +83,8 @@ AI calls are bounded and optional to complete the booking flow. The scheduling e
 
 Use server-enforced roles. Students can view their own requests; faculty can review requests in the demo queue. Use an atomic approval operation and a database constraint to prevent two confirmed bookings for the same slot, even if approvals are attempted at the same time. Validate required fields, IDs, time ranges, and text lengths on the server. Explain errors without exposing credentials or internals.
 
+**Confirmed sign-in and mobile requirements:** The final submission includes both modes in one repository. Normal mode uses an administrator-provisioned college ID and a LabLink-specific password, not campus credentials. Roles are assigned by the server. No public registration or self-service password recovery. Local-only demo mode offers one-click entry as either of two fictional students or the fictional faculty member, using isolated, resettable data. Demo entry is disabled in normal mode. Both modes must support their full workflows at 320 CSS pixels without horizontal scrolling or zooming, with keyboard access, visible focus, and labeled controls.
+
 **Out of scope for the hackathon:** Campus SSO, live inventory or calendars, automatic approvals or reassignment, notifications, recurring or multi-resource bookings, and utilization dashboards. A public deployment is optional; the MVP must run locally from a fresh clone.
 
 ## 6. Evaluation and acceptance criteria

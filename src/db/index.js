@@ -5,11 +5,13 @@ import { fileURLToPath } from 'node:url';
 import { seedDatabase } from './seed.js';
 
 const defaultPath = fileURLToPath(new URL('../../data/lablink.sqlite', import.meta.url));
+const normalPath = fileURLToPath(new URL('../../data/normal.sqlite', import.meta.url));
 const schema = readFileSync(new URL('./schema.sql', import.meta.url), 'utf8');
-const schemaVersion = 1;
+const credentialsSchema = readFileSync(new URL('./credentials.sql', import.meta.url), 'utf8');
+const schemaVersion = 2;
 
 // Call once at startup. Tests can supply ':memory:' and a fixed clock.
-export function openDatabase(path = defaultPath, { now = Date.now() } = {}) {
+export function openDatabase(path = defaultPath, { now = Date.now(), includeDemo = true } = {}) {
   if (path !== ':memory:') mkdirSync(dirname(path), { recursive: true });
   const db = new DatabaseSync(path, { enableForeignKeyConstraints: true });
 
@@ -21,10 +23,13 @@ export function openDatabase(path = defaultPath, { now = Date.now() } = {}) {
       const { user_version: version } = db.prepare('PRAGMA user_version').get();
       if (version === 0) {
         db.exec(schema);
-        seedDatabase(db, now);
-        db.exec(`PRAGMA user_version = ${schemaVersion}`);
-      } else if (version !== schemaVersion) {
+        seedDatabase(db, now, includeDemo);
+      } else if (version !== 1 && version !== schemaVersion) {
         throw new Error(`Unsupported LabLink database version: ${version}`);
+      }
+      if (version < schemaVersion) {
+        db.exec(credentialsSchema);
+        db.exec(`PRAGMA user_version = ${schemaVersion}`);
       }
       db.exec('COMMIT');
     } catch (error) {
@@ -36,6 +41,10 @@ export function openDatabase(path = defaultPath, { now = Date.now() } = {}) {
     db.close();
     throw error;
   }
+}
+
+export function openNormalDatabase() {
+  return openDatabase(normalPath, { includeDemo: false });
 }
 
 // Keep the existing scaffold smoke test on the same initialization path.

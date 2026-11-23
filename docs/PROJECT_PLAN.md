@@ -8,7 +8,7 @@
 
 - One server-rendered Node.js 26 app: Express 5, EJS 3, and plain CSS. No frontend build or external database service. Verified locally: Node 26.13.1, npm 11.20.0, built-in `node:sqlite` using SQLite 3.54.1. The repo had no application stack to migrate.
 - Use HTML pages and form posts, with booking, scheduling, and AI logic independent of templates. SQLite stores users, resources, slots, requests, and bookings. Seed fictional accounts and future slots relative to setup time.
-- Bind to loopback by default. Generate temporary startup sign-in codes for two fictional students and one faculty member. Use server-side sessions, role checks and CSRF protection for mutations. Students only see their own requests. This is demo authentication, not production identity infrastructure.
+- Bind to loopback by default. Replace the original temporary-code sign-in with administrator-provisioned college IDs and LabLink-specific passwords for `npm start`; store salted password hashes, throttle attempts, and keep server-side sessions, role checks, and CSRF protection. `npm run demo` will use its own fresh in-memory database and one-click fictional personas; normal mode must not expose the demo entry route. Students only see their own requests. No signup or password recovery flow.
 - Keep approval transactional: recheck slot feasibility and request status, insert a booking, and update the request together. A unique constraint on the booked slot prevents double-booking. Seed non-overlapping slots for each resource.
 - Put Gemini behind one server-side adapter. Scheduling is deterministic and advisory; order eligible requests by fewest feasible same-resource alternatives, earliest deadline, then earliest submission. AI calls are optional and separate from ordinary browsing and booking. No-key operation is required; live verification needs credentials.
 - Build and verify locally. Public deployment is optional and not budgeted. If deployed later, revisit demo authentication and use a persistent disk for SQLite.
@@ -61,7 +61,7 @@ The spec records a four-hour event, a working build target of **3h 15m–3h 30m*
 | T-009 | Optional catalog action sends the project description and relevant catalog entries; render validated catalog IDs and short reasons only. | Reject unknown IDs. Catalog search and ordinary requests stay usable on missing credentials or provider failure. |
 | T-010 | Optional faculty action sends computed facts without student names or free-text project descriptions. No AI ranking or mutations. | Display canonical scheduling facts regardless of provider output. On failure or no key, label the deterministic explanation as fallback. |
 | T-011 | Use `node --test`, isolated databases, and a stubbed AI adapter. No live network dependency. | Cover alternative counts, both tie-breaks, no alternative, invalid input, role enforcement, competing approvals, and provider failure. `npm test` passes without a key. |
-| T-012 | Refine templates and styles for labels, keyboard use, visible focus, readable contrast, text statuses, and errors. No decorative extras. | Walk the student and faculty flows by keyboard and check feedback after submissions, including invalid input and a taken slot. |
+| T-012 | Wire both sign-in screens, then refine templates and styles for labels, keyboard use, visible focus, readable contrast, text statuses, and errors. | Walk both modes at 320 CSS pixels without horizontal scrolling or zooming, including invalid input, faculty comparison, and a taken slot. |
 | T-013 | README covers the problem, solution, features, stack, prerequisites, installation, demo sign-in, run/test commands, configuration, and external service. | Include a reproducible conflict walkthrough and distinguish live AI from no-key fallback. |
 | T-014 | Final fresh-clone and public-repo checks. Live Gemini smoke test depends on credentials; submission depends on portal availability. No optional deployment work. | Install, test, run, and rehearse from `main`. Check public visibility while signed out, only `main` on the remote, size strictly below 10 MB including history, and no secrets or generated files. Hand off the verified URL before cutoff; preserve both attempts until checks pass. |
 
@@ -75,7 +75,7 @@ The spec records a four-hour event, a working build target of **3h 15m–3h 30m*
 ## Dependencies & Setup
 
 - Node.js 26 and npm; no separate SQLite service or frontend build step. Commit the npm lockfile.
-- Intended commands after scaffolding: `npm ci`, `npm start`, and `npm test`. Startup initializes demo data and prints temporary local sign-in codes. Tests use isolated data.
+- Final commands: `npm ci`, `npm run demo`, `npm start`, and `npm test`. Put the demo walkthrough first in the README and document provisioning and normal sign-in separately. Tests use isolated data. Until the sign-in screens are wired, the original startup codes remain available for local development.
 - Optional: copy `.env.example` to ignored `.env` and set `GEMINI_API_KEY` and, if needed, `GEMINI_MODEL`. The server loads configuration locally; no private key goes to browser code.
 
 ## Risks & Assumptions
