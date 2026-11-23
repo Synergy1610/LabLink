@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>My requests · LabLink</title>
+  </head>
+  <body>
+    <nav aria-label="Main navigation"><a href="/">LabLink</a> <a href="/catalog">Equipment catalog</a> <a href="/account">Account</a></nav>
+    <main>
+      <h1>My requests</h1>
+      <% if (error) { %><p role="alert"><%= error %></p><% } %>
+      <% if (slot) { %>
+        <section aria-labelledby="request-heading">
+          <h2 id="request-heading">Request a slot for <%= slot.resource_name %></h2>
+          <p><%= slot.department %> · <%= formatTime(slot.starts_at) %> to <%= formatTime(slot.ends_at) %></p>
+          <% if (slot.booking_id !== null || slot.starts_at <= now) { %>
+            <p>This slot is no longer available. <a href="/catalog">Choose another slot</a>.</p>
+          <% } else { %>
+            <p>Submitting this request does not reserve the slot. Faculty must approve it first.</p>
+            <form method="post" action="/requests">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <input type="hidden" name="slotId" value="<%= slot.id %>">
+              <p><label for="project-details">Project description</label><br>
+              <textarea id="project-details" name="projectDetails" maxlength="600" rows="4" required><%= fields.projectDetails ?? '' %></textarea></p>
+              <fieldset>
+                <legend>Project deadline (IST)</legend>
+                <p>Choose a deadline at or after the slot ends.</p>
+                <p><label for="deadline-date">Date (DD/MM/YYYY)</label><br>
+                <input id="deadline-date" name="deadlineDate" type="text" placeholder="DD/MM/YYYY" maxlength="10" pattern="[0-9]{2}/[0-9]{2}/[0-9]{4}" value="<%= fields.deadlineDate ?? '' %>" required></p>
+                <p><label for="deadline-time">Time (IST)</label><br>
+                <input id="deadline-time" name="deadlineTime" type="time" value="<%= fields.deadlineTime ?? '' %>" required></p>
+              </fieldset>
+              <p><label for="requirements">Equipment requirements (optional)</label><br>
+              <textarea id="requirements" name="requirements" maxlength="300" rows="2"><%= fields.requirements ?? '' %></textarea></p>
+              <button type="submit">Submit request</button>
+            </form>
+          <% } %>
+        </section>
+      <% } %>
+      <h2>Request history</h2>
+      <% if (!requests.length) { %><p>No requests yet. <a href="/catalog">Find equipment to request</a>.</p><% } %>
+      <% for (const request of requests) { %>
+        <article>
+          <h3><%= request.resource_name %> · <%= formatTime(request.starts_at) %></h3>
+          <p><%= request.project_details %></p>
+          <p><strong>Status:</strong> <%= { pending: 'Pending', approved: 'Approved · Booking confirmed', declined: 'Declined' }[request.status] %></p>
+          <% if (request.slotTaken) { %>
+            <p>This slot is now booked by another request.</p>
+            <% if (request.alternative) { %>
+              <p><strong>Earliest alternative:</strong> <%= formatTime(request.alternative.starts_at) %> to <%= formatTime(request.alternative.ends_at) %>.</p>
+              <p><a href="/requests?alternativeFor=<%= request.id %>">Request this alternative</a> (requires faculty approval).</p>
+            <% } else { %>
+              <p>No available alternative for this equipment before your project deadline.</p>
+            <% } %>
+          <% } %>
+        </article>
+      <% } %>
+    </main>
+  </body>
+</html>

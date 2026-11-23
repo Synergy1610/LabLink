@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Demo account · LabLink</title>
+  </head>
+  <body>
+    <main>
+      <h1>Demo account</h1>
+      <p>Signed in as <strong><%= currentUser.display_name %></strong> (<%= currentUser.role %>).</p>
+      <p><a href="/catalog">Browse the equipment catalog</a></p>
+      <% if (currentUser.role === 'student') { %><p><a href="/requests">My requests</a></p><% } %>
+      <% if (currentUser.role === 'faculty') { %><p><a href="/faculty">Review booking requests</a></p><% } %>
+      <form method="post" action="/sign-out">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <button type="submit">Sign out</button>
+      </form>
+      <p><a href="/">Back to LabLink</a></p>
+    </main>
+  </body>
+</html>

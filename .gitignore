@@ -1,0 +1,16 @@
+/node_modules/
+/.cache/
+/coverage/
+/dist/
+/build/
+/data/
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
+*.log
+.env
+.env.*
+!.env.example

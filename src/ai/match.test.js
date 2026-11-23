@@ -1,0 +1,78 @@
+import assert from 'node:assert/strict';
+import { once } from 'node:events';
+import test from 'node:test';
+import { createApp } from '../app.js';
+import { openDatabase } from '../db/index.js';
+import { matchEquipment } from './match.js';
+
+test('equipment matching discards unknown or duplicate IDs and uses canonical names', async () => {
+  const catalog = [{ id: 1, name: 'Oscilloscope', capabilities: 'Signal timing', slots: ['private slot data'] }];
+  const gemini = { generate: async ({ prompt }) => {
+    assert.equal(JSON.parse(prompt).project, 'Measure pulse timing');
+    assert.doesNotMatch(prompt, /private slot data/);
+    return { ok: true, text: JSON.stringify([
+      { resourceId: 99, reason: 'Invented device' },
+      { resourceId: 1, name: 'Invented name', reason: ' Shows pulse timing. ' },
+      { resourceId: 1, reason: 'Duplicate' },
+    ]) };
+  } };
+  assert.deepEqual(await matchEquipment(gemini, 'Measure pulse timing', catalog), {
+    ok: true, matches: [{ resourceId: 1, name: 'Oscilloscope', reason: 'Shows pulse timing.' }],
+  });
+  const invalid = { generate: async () => ({ ok: true, text: '[{"resourceId":99,"reason":"Invented"}]' }) };
+  assert.deepEqual(await matchEquipment(invalid, 'Measure pulse timing', catalog), { ok: false, reason: 'invalid_response' });
+});
+
+test('catalog matching renders known results and preserves search when Gemini is unavailable', async (t) => {
+  let calls = 0;
+  let result = { ok: true, text: '[{"resourceId":1,"reason":"Measure pulses <b>directly</b>."}]' };
+  let code;
+  const db = openDatabase(':memory:');
+  const app = createApp({
+    db,
+    reportDemoCode: (user, value) => { if (user.id === 2) code = value; },
+    gemini: { generate: async () => { calls++; return result; } },
+  });
+  const server = app.listen(0, '127.0.0.1');
+  await once(server, 'listening');
+  t.after(async () => {
+    await new Promise((resolve) => server.close(resolve));
+    db.close();
+  });
+
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const cookie = (response) => response.headers.get('set-cookie').split(';')[0];
+  const token = (html) => html.match(/name="_csrf" value="([a-f0-9]{64})"/)[1];
+  const post = (route, session, fields) => fetch(`${base}${route}`, {
+    method: 'POST', headers: { cookie: session }, body: new URLSearchParams(fields), redirect: 'manual',
+  });
+
+  const signIn = await fetch(`${base}/sign-in`);
+  const auth = await post('/sign-in', cookie(signIn), { code, _csrf: token(await signIn.text()) });
+  assert.equal(auth.status, 303);
+  const session = cookie(auth);
+  const catalog = await fetch(`${base}/catalog`, { headers: { cookie: session } });
+  const _csrf = token(await catalog.text());
+  const match = (project) => post('/catalog/match', session, { project, _csrf });
+  assert.equal((await match('x'.repeat(601))).status, 400);
+  assert.equal((await post('/catalog/match', session, { project: 'Measure pulses' })).status, 403);
+  assert.equal(calls, 0);
+
+  const successful = await match('Measure pulses');
+  assert.equal(successful.status, 200);
+  const html = await successful.text();
+  assert.match(html, /href="#resource-1">Digital Oscilloscope/);
+  assert.match(html, /Measure pulses &lt;b&gt;directly&lt;\/b&gt;/);
+  assert.match(html, /href="\/requests\?slot=1"/);
+
+  for (const reason of ['not_configured', 'timeout']) {
+    result = { ok: false, reason };
+    const fallback = await match('Measure pulses');
+    assert.equal(fallback.status, 200);
+    assert.match(await fallback.text(), /You can still search the catalog below/);
+  }
+
+  const search = await fetch(`${base}/catalog?q=workstation`, { headers: { cookie: session } });
+  assert.match(await search.text(), /CAD Workstation/);
+  assert.equal(calls, 3);
+});

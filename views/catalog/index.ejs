@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Equipment catalog · LabLink</title>
+  </head>
+  <body>
+    <nav aria-label="Main navigation">
+      <a href="/">LabLink</a>
+      <% if (currentUser.role === 'student') { %><a href="/requests">My requests</a><% } %>
+      <% if (currentUser.role === 'faculty') { %><a href="/faculty">Faculty queue</a><% } %>
+      <a href="/account">Account</a>
+    </nav>
+    <main>
+      <h1>Equipment catalog</h1>
+      <% if (currentUser.role === 'student') { %>
+        <section aria-labelledby="project-match-heading">
+          <h2 id="project-match-heading">Find equipment for your project</h2>
+          <form action="/catalog/match" method="post">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <p><label for="project">Project description</label></p>
+            <p id="project-privacy">This optional feature sends your description to Gemini. Don’t include personal or confidential information.</p>
+            <textarea id="project" name="project" rows="4" required maxlength="<%= projectDescriptionLimit %>" aria-describedby="project-privacy"><%= project %></textarea>
+            <button type="submit">Get AI suggestions</button>
+          </form>
+          <% if (message) { %><p role="status"><%= message %></p><% } %>
+          <% if (matches !== null) { %>
+            <h3>Gemini suggestions</h3>
+            <% if (matches.length) { %>
+              <ul>
+                <% for (const match of matches) { %>
+                  <li><a href="#resource-<%= match.resourceId %>"><%= match.name %></a> — <%= match.reason %></li>
+                <% } %>
+              </ul>
+              <p>Check the catalog below for actual availability. Faculty approval is still required.</p>
+            <% } else { %><p>No suitable equipment was suggested. Try another description or search manually.</p><% } %>
+          <% } %>
+        </section>
+      <% } %>
+      <form action="/catalog" method="get" role="search">
+        <label for="search">Search by name, category, or department</label>
+        <input id="search" name="q" type="search" maxlength="100" value="<%= search %>">
+        <button type="submit">Search</button>
+        <% if (search) { %><a href="/catalog">Clear search</a><% } %>
+      </form>
+      <% if (!resources.length) { %><p>No matching resources.</p><% } %>
+      <% for (const resource of resources) { %>
+        <article id="resource-<%= resource.id %>">
+          <h2><%= resource.name %></h2>
+          <p><%= resource.department %> · <%= resource.category %></p>
+          <p><%= resource.description %></p>
+          <p><strong>Capabilities:</strong> <%= resource.capabilities %></p>
+          <% if (resource.slots.length) { %>
+            <ul>
+              <% for (const slot of resource.slots) { %>
+                <li>
+                  <%= formatTime(slot.starts_at) %> to <%= formatTime(slot.ends_at) %>
+                  <% if (currentUser.role === 'student') { %>
+                    <a href="/requests?slot=<%= slot.id %>" aria-label="Request <%= resource.name %> at <%= formatTime(slot.starts_at) %>">Request this slot</a>
+                  <% } %>
+                </li>
+              <% } %>
+            </ul>
+          <% } else { %><p>No available slots.</p><% } %>
+        </article>
+      <% } %>
+    </main>
+  </body>
+</html>
