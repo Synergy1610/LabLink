@@ -18,11 +18,13 @@
 
 ## Screenshots
 
-Captured from the local one-click demo with fictional sample data. Select an image to view it at full size.
+Captured from the public-demo landing page and local one-click student/faculty flows using fictional sample data. Select an image to view it at full size.
 
-| Equipment catalog | Student request form | Faculty conflict recommendation |
-|---|---|---|
-| [![LabLink equipment catalog showing sample resources grouped by lab](docs/screenshots/lablink-catalog.webp)](docs/screenshots/lablink-catalog.webp) | [![LabLink student request form for the Digital Oscilloscope](docs/screenshots/lablink-request.webp)](docs/screenshots/lablink-request.webp) | [![LabLink faculty queue recommending Anika with zero alternatives over Sam with two](docs/screenshots/lablink-faculty.webp)](docs/screenshots/lablink-faculty.webp) |
+| Public landing page | Equipment catalog |
+|---|---|
+| [![LabLink public demo landing page with featured equipment](docs/screenshots/lablink-landing.webp)](docs/screenshots/lablink-landing.webp) | [![LabLink equipment catalog showing sample resources grouped by lab](docs/screenshots/lablink-catalog.webp)](docs/screenshots/lablink-catalog.webp) |
+| Student request form | Faculty conflict recommendation |
+| [![LabLink student request form for the Digital Oscilloscope](docs/screenshots/lablink-request.webp)](docs/screenshots/lablink-request.webp) | [![LabLink faculty queue recommending Anika with zero alternatives over Sam with two](docs/screenshots/lablink-faculty.webp)](docs/screenshots/lablink-faculty.webp) |
 
 ## Stack
 
