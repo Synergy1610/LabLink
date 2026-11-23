@@ -108,15 +108,6 @@
           </div>
         </section>
       <% } %>
-      <% if (resources.length) { %>
-        <dialog id="equipment-details-dialog" aria-labelledby="equipment-details-heading">
-          <div class="dialog-heading">
-            <h2 id="equipment-details-heading">Equipment details</h2>
-            <button type="button" class="outline" data-close autofocus>Close</button>
-          </div>
-          <div data-details-content></div>
-        </dialog>
-      <% } %>
       <% if (currentUser.role === 'student') { %>
         <dialog id="slot-dialog" aria-labelledby="slot-dialog-heading">
           <div class="dialog-heading">

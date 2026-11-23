@@ -118,8 +118,6 @@ a { color: var(--forest); text-underline-offset: .18em; }
 .equipment-details { color: var(--muted); font-size: .95rem; }
 .equipment-details summary { width: fit-content; min-height: 44px; align-content: center; padding-inline: .4rem; color: var(--forest); cursor: pointer; }
 .equipment-details p { margin-block-start: .5rem; }
-.equipment-details-trigger { justify-self: start; }
-[data-details-content] p:last-child { margin-block-end: 0; }
 .catalog-dialog form, .catalog-dialog .match-list + p { margin-block-start: 1rem; }
 .catalog-dialog form + h3, .catalog-dialog [role="status"] + h3 { margin-block-start: 1.25rem; }
 .catalog-assist { background: #26352e; }

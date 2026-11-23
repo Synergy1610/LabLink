@@ -42,35 +42,21 @@ if (typeof HTMLDialogElement !== 'undefined' && typeof HTMLDialogElement.prototy
     }
     if (panel.hasAttribute('data-show-on-load')) dialog.showModal();
   }
+}
 
-  const equipmentDialog = document.querySelector('#equipment-details-dialog');
-  if (equipmentDialog) {
-    const heading = equipmentDialog.querySelector('h2');
-    const content = equipmentDialog.querySelector('[data-details-content]');
-    let opener;
-    equipmentDialog.querySelector('[data-close]').addEventListener('click', () => equipmentDialog.close());
-    equipmentDialog.addEventListener('close', () => {
-      if (!equipmentDialog.open) opener?.focus({ preventScroll: true });
-    });
+for (const grid of document.querySelectorAll('.catalog-grid')) {
+  grid.addEventListener('click', (event) => {
+    const details = event.target.closest('.equipment-details > summary')?.parentElement;
+    if (!details) return;
 
-    for (const details of document.querySelectorAll('.equipment-details')) {
-      const summary = details.querySelector('summary');
-      const title = details.closest('.catalog-card').querySelector('h3').textContent;
-      const trigger = document.createElement('button');
-      trigger.type = 'button';
-      trigger.className = 'outline equipment-details-trigger';
-      trigger.textContent = summary.textContent;
-      trigger.setAttribute('aria-label', summary.getAttribute('aria-label'));
-      trigger.setAttribute('aria-haspopup', 'dialog');
-      trigger.setAttribute('aria-controls', equipmentDialog.id);
-      trigger.addEventListener('click', () => {
-        opener = trigger;
-        heading.textContent = title;
-        content.replaceChildren(...Array.from(details.querySelectorAll('p'), (paragraph) => paragraph.cloneNode(true)));
-        trigger.focus({ preventScroll: true });
-        equipmentDialog.showModal();
-      });
-      details.replaceWith(trigger);
-    }
-  }
+    // Use the current layout so rows follow the responsive grid.
+    const top = details.closest('.catalog-card').getBoundingClientRect().top;
+    const row = [...grid.querySelectorAll('.catalog-card')]
+      .filter((card) => card.getBoundingClientRect().top === top);
+    if (row.length < 2) return;
+
+    event.preventDefault();
+    const open = !details.open;
+    for (const card of row) card.querySelector('.equipment-details').open = open;
+  });
 }
