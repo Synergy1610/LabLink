@@ -1,4 +1,6 @@
-# LabLink — Project Specification
+# LabLink — Original Project Specification
+
+> Historical planning document for the original PromptWars 2026 MVP. It records that event's requirements and assumptions; it is not a current production specification or active roadmap. See [README](../README.md) and [Architecture](ARCHITECTURE.md) for the current project overview.
 
 **Status:** Approved\
 **Event:** PROMPTWARS 2026\

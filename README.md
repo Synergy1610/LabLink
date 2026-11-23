@@ -1,8 +1,24 @@
 # LabLink
 
-**Vertical: Education.** LabLink is a campus lab equipment booking tool for students and faculty.
+[![CI](https://github.com/Synergy1610/LabLink/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Synergy1610/LabLink/actions/workflows/ci.yml)
 
-LabLink helps students find equipment across campus departments and request faculty-approved bookings. When students compete for a slot, it recommends the request with the fewest available alternatives before its deadline. Ties go to the earliest deadline, then the earliest submission. Faculty decide what to approve.
+**A campus lab equipment booking prototype for students and faculty.** LabLink helps students discover equipment across departments, request faculty-approved access, and understand fair recommendations when requests conflict.
+
+> **Prototype notice:** The catalog and accounts are fictional sample data. The hosted demo is disposable and is not intended for real bookings or personal information.
+
+## Features
+
+- Browse and filter sample equipment across labs and departments.
+- Request a time slot with a project deadline and requirements.
+- Rank competing requests by fewest viable alternatives, then earliest deadline, then earliest submission.
+- Require a faculty decision for every booking; recommendations never approve automatically.
+- Show a viable alternative when another request gets the slot.
+- Optionally use Gemini for equipment matching and plain-language explanations; core booking works without AI.
+- Use passwordless demo personas or locally provisioned student and faculty accounts.
+
+## Stack
+
+Node.js 26, Express 5, EJS, SQLite (`node:sqlite`), and plain CSS/JavaScript. No frontend build step or external database is required for local development.
 
 ## Quick start for reviewers
 
@@ -30,7 +46,7 @@ Run `npm run review` and open <http://127.0.0.1:3000/sign-in>. Use these **publi
 
 These accounts are for **local evaluation only**. This shortcut uses the same password authentication as `npm start` but creates isolated in-memory data, with no preset bookings. Try submitting a request as the student, then sign out and approve it as faculty. Restarting resets the review data. These credentials do not apply to `npm start`.
 
-## How it works
+## Architecture and booking rules
 
 Express and EJS serve the app; Node's built-in SQLite stores slots, requests, and bookings. Students choose an available slot and enter a project deadline. A pending request does not reserve the slot. For competing requests, LabLink counts the other open slots for the same resource that finish by each student's deadline. It ranks requests by fewest alternatives, then earliest deadline, then earliest submission. Faculty can accept or override the recommendation. Approval is transactional so two decisions cannot book the same slot; after approval, students can request a viable alternative if one exists.
 
@@ -59,7 +75,7 @@ gcloud run deploy lablink-demo --source . --region asia-south1 \
 
 Open the resulting HTTPS URL and choose **Try the demo**. Check the student and faculty walkthrough in a private browser window before sharing the link.
 
-The homepage uses the LabLink mark by default. For a local preview, place the DPS Electronic City logo at `data/dps-ecity-logo.webp`. If that file is absent, the app can still use `data/greenwood-high-logo.webp`. Both school-logo previews are labeled unofficial; neither logo is bundled or tracked. Do not redistribute them without permission.
+The homepage uses the LabLink mark by default. For a local preview, place a school logo in ignored `data/` only if you have permission to use it; logos are not included in the repository or hosted demo.
 
 ## Persistent campus setup (optional)
 
@@ -82,11 +98,18 @@ With a Gemini API key, students can get equipment matches from their project des
 
 Copy `.env.example` to `.env`, set `GEMINI_API_KEY` locally, and restart. `GEMINI_MODEL` can optionally override the default model. `PORT` overrides the default `3000`. Never commit `.env` or send private data in a demo prompt.
 
-## Checks
+## Development checks
 
 ```sh
-npm test
-npm run check
+npm ci
+npm run demo       # passwordless sample walkthrough
+npm run lint       # ESLint over server, tests, and browser JavaScript
+npm test           # isolated automated tests
+npm run check      # lint plus all tests; also run by GitHub Actions
 ```
 
-Tests use isolated databases and stub Gemini. See the [specification](docs/PROJECT_SPEC.md), [implementation plan](docs/PROJECT_PLAN.md), and [photo credits](docs/PHOTO_CREDITS.md).
+Tests use isolated databases and stub Gemini; no key or live network call is needed. See [architecture](docs/ARCHITECTURE.md), [contributing](CONTRIBUTING.md), [security policy](SECURITY.md), and [photo credits](docs/PHOTO_CREDITS.md). Original event planning documents are retained as historical context in `docs/`.
+
+## License
+
+This repository does not currently include an open-source license. Public visibility alone does not grant permission to reuse or redistribute the code. Add a license only after the project owner chooses one.

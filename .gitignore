@@ -5,6 +5,7 @@
 /build/
 /data/
 /E-City-1.webp
+/image.png
 *.db
 *.db-*
 *.sqlite

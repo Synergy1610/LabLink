@@ -1,4 +1,6 @@
-# LabLink — Project Plan
+# LabLink — Archived PromptWars Build Plan
+
+> Historical time-boxed build plan from PromptWars 2026. Milestones, deadlines, and submission instructions below are no longer active. Kept for project history only; see [Architecture](ARCHITECTURE.md) for the current system structure.
 
 **Status:** Approved\
 **Product source of truth:** [PROJECT_SPEC.md](PROJECT_SPEC.md)\
