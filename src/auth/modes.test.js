@@ -4,10 +4,10 @@ import { once } from 'node:events';
 import test from 'node:test';
 import { createApp } from '../app.js';
 import { openDatabase } from '../db/index.js';
+import { openReviewDatabase } from '../db/review.js';
 import { provisionAccount } from './credentials.js';
 
-async function start(t, authMode, includeDemo) {
-  const db = openDatabase(':memory:', { includeDemo });
+async function start(t, authMode, includeDemo, db = openDatabase(':memory:', { includeDemo })) {
   const server = createApp({ db, authMode }).listen(0, '127.0.0.1');
   await once(server, 'listening');
   t.after(async () => {
@@ -21,6 +21,28 @@ async function start(t, authMode, includeDemo) {
   });
   return { db, request };
 }
+
+test('the public review logins use password auth with separate student and faculty access', async (t) => {
+  const { db, request } = await start(t, 'normal', false, await openReviewDatabase());
+  assert.equal(db.location(), null);
+  assert.equal(db.prepare('SELECT COUNT(*) AS count FROM requests').get().count, 0);
+  assert.equal(db.prepare('SELECT COUNT(*) AS count FROM users').get().count, 2);
+
+  for (const [collegeId, password, allowed, forbidden] of [
+    ['REVIEW-STUDENT', 'ReviewStudent26!', '/requests', '/faculty'],
+    ['REVIEW-FACULTY', 'ReviewFaculty26!', '/faculty', '/requests'],
+  ]) {
+    const form = await request('/sign-in');
+    const cookie = readCookie(form);
+    assert.doesNotMatch(await form.clone().text(), /\/demo\/sign-in/);
+    const _csrf = await readCsrf(form);
+    const login = await request('/sign-in', cookie, { collegeId, password, _csrf });
+    assert.equal(login.status, 303);
+    const session = readCookie(login);
+    assert.equal((await request(allowed, session)).status, 200);
+    assert.equal((await request(forbidden, session)).status, 403);
+  }
+});
 
 function readCookie(response) {
   return response.headers.get('set-cookie').split(';')[0];
