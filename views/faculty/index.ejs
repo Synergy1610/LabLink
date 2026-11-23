@@ -8,16 +8,19 @@
     <script src="/ai-status.js" defer></script>
   </head>
   <body>
-    <%- include('../partials/nav') %>
+    <%- include('../partials/nav', { page: 'faculty' }) %>
     <main id="content" class="flow">
       <h1>Faculty queue</h1>
+      <p class="muted">Compare requests for the same slot before approving a booking.</p>
       <% if (error) { %><p role="alert"><%= error %></p><% } %>
       <% if (!slotGroups.length) { %><p>No pending requests.</p><% } %>
       <% for (const { requests, recommendation, aiExplanation } of slotGroups) { %>
         <% const slot = requests[0]; %>
-        <section class="<%= recommendation ? 'conflict' : 'surface' %>" aria-labelledby="slot-<%= slot.slot_id %>">
-          <h2 id="slot-<%= slot.slot_id %>"><%= slot.resource_name %></h2>
-          <p><%= slot.department %> · <%= formatTime(slot.starts_at) %> to <%= formatTime(slot.ends_at) %></p>
+        <section class="queue-item" aria-labelledby="slot-<%= slot.slot_id %>">
+          <header>
+            <h2 id="slot-<%= slot.slot_id %>"><%= slot.resource_name %></h2>
+            <p class="muted"><%= slot.department %> · <%= formatTime(slot.starts_at) %> to <%= formatTime(slot.ends_at) %></p>
+          </header>
           <% if (recommendation) { %>
             <div class="recommendation">
             <p><strong>Recommended: <%= recommendation.winner.student_name %></strong></p>
@@ -37,15 +40,18 @@
           <% } %>
           <div class="grid">
           <% for (const request of requests) { %>
-            <article class="surface">
-              <h3><%= request.student_name %> · Request #<%= request.id %></h3>
-              <% if (recommendation?.counts.has(request.id)) { %>
-                <p><strong>Viable alternatives before deadline:</strong> <%= recommendation.counts.get(request.id) %></p>
-              <% } %>
-              <p><strong>Project:</strong> <%= request.project_details %></p>
-              <p><strong>Deadline:</strong> <%= formatTime(request.deadline) %></p>
+             <article class="surface candidate">
+               <h3><%= request.student_name %> · Request #<%= request.id %></h3>
+              <% if (recommendation?.winner.id === request.id) { %><p><span class="badge">Recommended</span></p><% } %>
+              <div class="comparison-facts">
+                <p><strong>Deadline:</strong> <%= formatTime(request.deadline) %></p>
+                <% if (recommendation?.counts.has(request.id)) { %>
+                  <p><strong>Viable alternatives before deadline:</strong> <%= recommendation.counts.get(request.id) %></p>
+                <% } %>
+              </div>
+               <p><strong>Project:</strong> <%= request.project_details %></p>
               <% if (request.requirements) { %><p><strong>Requirements:</strong> <%= request.requirements %></p><% } %>
-              <form method="post" action="/faculty/requests/<%= request.id %>/approve" class="actions">
+              <form method="post" action="/faculty/requests/<%= request.id %>/approve" class="actions decision-actions">
                 <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 <% if (request.booked_request_id === null && request.starts_at > now && request.ends_at <= request.deadline) { %>
                   <button type="submit" aria-label="Approve request <%= request.id %> from <%= request.student_name %>">Approve</button>

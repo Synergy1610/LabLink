@@ -8,12 +8,21 @@
     <script src="/ai-status.js" defer></script>
   </head>
   <body>
-    <%- include('../partials/nav') %>
+    <%- include('../partials/nav', { page: 'catalog' }) %>
     <main id="content" class="flow">
       <h1>Equipment catalog</h1>
+      <p class="muted">Browse lab equipment, development kits, and workstations across campus.</p>
+      <form action="/catalog" method="get" role="search" class="surface stack">
+        <label for="search">Search by name, category, or department</label>
+        <div class="form-row">
+          <input id="search" name="q" type="search" maxlength="100" value="<%= search %>">
+          <button type="submit">Search</button>
+          <% if (search) { %><a class="button outline" href="/catalog">Clear search</a><% } %>
+        </div>
+      </form>
       <% if (currentUser.role === 'student') { %>
-        <section class="surface" aria-labelledby="project-match-heading">
-          <h2 id="project-match-heading">Find equipment for your project</h2>
+        <details class="surface catalog-assist"<% if (project || message || matches !== null) { %> open<% } %>>
+          <summary>Find equipment with Gemini</summary>
           <form action="/catalog/match" method="post" class="stack" data-ai>
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <p><label for="project">Project description</label></p>
@@ -34,14 +43,8 @@
               <p>Check the catalog below for actual availability. Faculty approval is still required.</p>
             <% } else { %><p>No suitable equipment was suggested. Try another description or search manually.</p><% } %>
           <% } %>
-        </section>
+        </details>
       <% } %>
-      <form action="/catalog" method="get" role="search" class="surface stack">
-        <label for="search">Search by name, category, or department</label>
-        <input id="search" name="q" type="search" maxlength="100" value="<%= search %>">
-        <button type="submit">Search</button>
-        <% if (search) { %><a href="/catalog">Clear search</a><% } %>
-      </form>
       <% if (!resources.length) { %><p>No matching resources.</p><% } %>
       <div class="grid">
       <% for (const resource of resources) { %>

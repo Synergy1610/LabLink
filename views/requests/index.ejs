@@ -7,14 +7,14 @@
     <link rel="stylesheet" href="/styles.css">
   </head>
   <body>
-    <%- include('../partials/nav') %>
+    <%- include('../partials/nav', { page: 'requests' }) %>
     <main id="content" class="narrow flow">
       <h1>My requests</h1>
       <% if (error) { %><p role="alert"><%= error %></p><% } %>
       <% if (slot) { %>
         <section class="surface" aria-labelledby="request-heading">
           <h2 id="request-heading">Request a slot for <%= slot.resource_name %></h2>
-          <p><%= slot.department %> · <%= formatTime(slot.starts_at) %> to <%= formatTime(slot.ends_at) %></p>
+          <p class="notice"><strong>Selected slot:</strong> <%= slot.department %> · <%= formatTime(slot.starts_at) %> to <%= formatTime(slot.ends_at) %></p>
           <% if (slot.booking_id !== null || slot.starts_at <= now) { %>
             <p>This slot is no longer available. <a href="/catalog">Choose another slot</a>.</p>
           <% } else { %>

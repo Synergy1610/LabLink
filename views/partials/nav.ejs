@@ -1,12 +1,13 @@
 <a class="skip" href="#content">Skip to content</a>
+<% const activePage = typeof page === 'string' ? page : ''; %>
 <header class="topbar">
   <nav aria-label="Main navigation">
     <a href="/" class="brand"><span aria-hidden="true">L</span> LabLink</a>
     <% if (currentUser) { %>
-      <a href="/catalog">Catalog</a>
-      <% if (currentUser.role === 'student') { %><a href="/requests">My requests</a><% } %>
-      <% if (currentUser.role === 'faculty') { %><a href="/faculty">Faculty queue</a><% } %>
-      <a href="/account">Account</a>
+      <a href="/catalog"<% if (activePage === 'catalog') { %> aria-current="page"<% } %>>Catalog</a>
+      <% if (currentUser.role === 'student') { %><a href="/requests"<% if (activePage === 'requests') { %> aria-current="page"<% } %>>My requests</a><% } %>
+      <% if (currentUser.role === 'faculty') { %><a href="/faculty"<% if (activePage === 'faculty') { %> aria-current="page"<% } %>>Faculty queue</a><% } %>
+      <a href="/account"<% if (activePage === 'account') { %> aria-current="page"<% } %>>Account</a>
       <% if (demoMode) { %><a href="/sign-in">Switch role</a><% } %>
     <% } else { %>
       <a href="/sign-in"><%= demoMode ? 'Try the demo' : 'Sign in' %></a>

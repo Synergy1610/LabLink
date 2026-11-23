@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="/styles.css">
   </head>
   <body>
-    <%- include('../partials/nav') %>
+    <%- include('../partials/nav', { page: 'account' }) %>
     <main id="content" class="narrow">
       <p class="eyebrow"><%= demoMode ? 'Local sandbox' : 'Campus access' %></p>
       <h1>Your account</h1>
