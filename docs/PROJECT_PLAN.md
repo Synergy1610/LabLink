@@ -15,7 +15,7 @@
 
 ## Time Budget
 
-The spec records a four-hour event, a working build target of **3h 15m–3h 30m**, and a **5:00 p.m. hard cutoff**. At the agreed planning snapshot of **1:02 p.m. IST**, **238 minutes** remained on the assumption of no scheduled breaks. The task estimates total **220 minutes**: **195** for the build and hardening, plus **25** reserved for release verification. The snapshot left **18 minutes of slack**; subtract any further elapsed time or interruptions before beginning. Cut visual polish and optional hosting before cutting safeguards or verification.
+The submission cutoff was extended to **6:00 p.m. IST**. The original task estimates totaled **220 minutes**, including **25** for release verification. After the final UI and catalog changes, reserve a release window to push, verify a fresh GitHub clone, and submit the public URL.
 
 ## Milestones
 

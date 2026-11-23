@@ -3,14 +3,15 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Faculty queue · LabLink</title>
+    <title>Booking Requests · LabLink</title>
+    <link rel="icon" href="/lablink.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/styles.css">
     <script src="/ai-status.js" defer></script>
   </head>
   <body>
     <%- include('../partials/nav', { page: 'faculty' }) %>
     <main id="content" class="flow">
-      <h1>Faculty queue</h1>
+      <h1>Booking Requests</h1>
       <p class="muted">Compare requests for the same slot before approving a booking.</p>
       <% if (error) { %><p role="alert"><%= error %></p><% } %>
       <% if (!slotGroups.length) { %><p>No pending requests.</p><% } %>

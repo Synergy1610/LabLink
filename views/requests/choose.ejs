@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Choose a slot · LabLink</title>
+    <link rel="icon" href="/lablink.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/slot-picker.js" defer></script>
+  </head>
+  <body>
+    <%- include('../partials/nav', { page: 'catalog' }) %>
+    <main id="content" class="narrow flow">
+      <a class="button outline" href="/catalog">Back to catalog</a>
+      <h1>Choose a slot</h1>
+      <p class="muted"><%= resource.name %> · <%= resource.lab %></p>
+      <section class="surface flow" aria-label="Slot selection">
+        <% if (!dates.size) { %>
+          <p>No available slots for this equipment.</p>
+        <% } else { %>
+          <form class="stack" action="/requests/choose" method="get">
+            <input type="hidden" name="resource" value="<%= resource.id %>">
+            <label for="slot-date">Date (DD/MM/YYYY)</label>
+            <select id="slot-date" name="date" required>
+              <option value="">Select a date</option>
+              <% for (const date of dates.keys()) { %>
+                <option value="<%= date %>"<% if (date === selectedDate) { %> selected<% } %>><%= date %></option>
+              <% } %>
+            </select>
+            <button id="show-times" class="tonal" type="submit">Show available times</button>
+          </form>
+            <form id="slot-times" class="stack" action="/requests" method="get"<% if (!selectedDate) { %> hidden<% } %>>
+              <label for="slot-time">Available time slots (IST)</label>
+              <select id="slot-time" name="slot" required>
+                <option value="">Select a time slot</option>
+                <% for (const { id, label } of dates.get(selectedDate) ?? []) { %>
+                  <option value="<%= id %>"><%= label %></option>
+                <% } %>
+              </select>
+              <button type="submit">Continue to booking</button>
+            </form>
+            <% for (const [date, slots] of dates) { %>
+              <template data-slot-date="<%= date %>">
+                <% for (const { id, label } of slots) { %>
+                  <option value="<%= id %>"><%= label %></option>
+                <% } %>
+              </template>
+            <% } %>
+        <% } %>
+      </section>
+    </main>
+  </body>
+</html>

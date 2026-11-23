@@ -62,7 +62,7 @@ test('catalog matching renders known results and preserves search when Gemini is
   const html = await successful.text();
   assert.match(html, /href="#resource-1">Digital Oscilloscope/);
   assert.match(html, /Measure pulses &lt;b&gt;directly&lt;\/b&gt;/);
-  assert.match(html, /href="\/requests\?slot=1"/);
+  assert.match(html, /href="\/requests\/choose\?resource=1"/);
 
   for (const reason of ['not_configured', 'timeout']) {
     result = { ok: false, reason };

@@ -17,8 +17,10 @@ Open <http://127.0.0.1:3000/sign-in>. There are no credentials to enter. **Switc
 
 1. Click **Try as Student · Sam Chen** and then **Open demo booking**. Anika already has a pending request for the first **Digital Oscilloscope** slot.
 2. Submit the prefilled request. Sam's deadline is after the last oscilloscope slot; all dates use **DD/MM/YYYY** and times are **IST**.
-3. Use **Switch role → Try as Faculty · Dr. Mira Patel**, then open **Faculty queue**. LabLink recommends Anika because she has **0** alternatives and Sam has **2**. If Gemini is configured, try **Explain with Gemini** before approving.
+3. Use **Switch role → Try as Faculty · Dr. Mira Patel**, then open **Booking Requests**. LabLink recommends Anika because she has **0** alternatives and Sam has **2**. If Gemini is configured, try **Explain with Gemini** before approving.
 4. Approve Anika. Switch back to Sam and open **My requests**. It shows **Slot taken** and offers the earliest viable alternative. Submitting it creates a new pending request.
+
+To browse independently, open **Catalog** and filter the nine resources by lab and search term. Open **Choose a slot** on a resource, select a date and its available time (IST), then continue to the booking form.
 
 ## Normal mode: college ID and password
 

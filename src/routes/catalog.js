@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { matchEquipment, projectDescriptionLimit } from '../ai/match.js';
 import { requireRole } from '../auth/index.js';
-import { findCatalog, formatTime } from '../booking/index.js';
+import { findCatalog } from '../booking/index.js';
 
 const photos = {
   1: { src: '/equipment/oscilloscope.webp', alt: 'Digital oscilloscope displaying several waveforms' },
@@ -14,16 +14,18 @@ const photoFor = (id) => photos[id];
 export function catalogRoutes(db, clock, gemini) {
   const router = Router();
 
-  function showCatalog(res, { search = '', project = '', matches = null, message = null, status = 200 } = {}) {
+  function showCatalog(res, { search = '', lab = '', project = '', matches = null, message = null, status = 200 } = {}) {
+    const labs = db.prepare('SELECT DISTINCT lab FROM resources ORDER BY lab').all().map((row) => row.lab);
+    if (!labs.includes(lab)) lab = '';
     return res.status(status).render('catalog/index', {
-      search, project, matches, message, projectDescriptionLimit,
-      resources: findCatalog(db, search, clock()), formatTime, photoFor,
+      search, lab, labs, project, matches, message, projectDescriptionLimit,
+      resources: findCatalog(db, search, clock(), lab), photoFor,
     });
   }
 
   router.get('/catalog', requireRole(), (req, res) => {
     const search = typeof req.query.q === 'string' ? req.query.q.trim().slice(0, 100) : '';
-    return showCatalog(res, { search });
+    return showCatalog(res, { search, lab: req.query.lab });
   });
 
   router.post('/catalog/match', requireRole('student'), async (req, res) => {
@@ -35,7 +37,7 @@ export function catalogRoutes(db, clock, gemini) {
       });
     }
 
-    const resources = db.prepare('SELECT id, name, department, category, capabilities FROM resources ORDER BY id LIMIT 30').all();
+    const resources = db.prepare('SELECT id, name, department, lab, category, capabilities FROM resources ORDER BY id LIMIT 30').all();
     const result = await matchEquipment(gemini, project, resources);
     if (!result.ok) {
       const message = result.reason === 'not_configured'

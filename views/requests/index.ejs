@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>My requests · LabLink</title>
+    <link rel="icon" href="/lablink.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/styles.css">
   </head>
   <body>
@@ -16,7 +17,8 @@
           <h2 id="request-heading">Request a slot for <%= slot.resource_name %></h2>
           <p class="notice"><strong>Selected slot:</strong> <%= slot.department %> · <%= formatTime(slot.starts_at) %> to <%= formatTime(slot.ends_at) %></p>
           <% if (slot.booking_id !== null || slot.starts_at <= now) { %>
-            <p>This slot is no longer available. <a href="/catalog">Choose another slot</a>.</p>
+            <p>This slot is no longer available.</p>
+            <a class="button outline" href="/requests/choose?resource=<%= slot.resource_id %>">Choose another slot</a>
           <% } else { %>
             <p>Submitting this request does not reserve the slot. Faculty must approve it first.</p>
             <form method="post" action="/requests">
@@ -40,7 +42,7 @@
         </section>
       <% } %>
       <h2>Request history</h2>
-      <% if (!requests.length) { %><p>No requests yet. <a href="/catalog">Find equipment to request</a>.</p><% } %>
+      <% if (!requests.length) { %><p>No requests yet.</p><a class="button outline" href="/catalog">Find equipment to request</a><% } %>
       <% for (const request of requests) { %>
         <article class="surface">
           <h3><%= request.resource_name %> · <%= formatTime(request.starts_at) %></h3>

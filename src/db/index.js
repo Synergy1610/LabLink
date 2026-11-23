@@ -2,13 +2,13 @@ import { mkdirSync, readFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { fileURLToPath } from 'node:url';
-import { seedDatabase } from './seed.js';
+import { seedDatabase, expandCatalog } from './seed.js';
 
 const defaultPath = fileURLToPath(new URL('../../data/lablink.sqlite', import.meta.url));
 const normalPath = fileURLToPath(new URL('../../data/normal.sqlite', import.meta.url));
 const schema = readFileSync(new URL('./schema.sql', import.meta.url), 'utf8');
 const credentialsSchema = readFileSync(new URL('./credentials.sql', import.meta.url), 'utf8');
-const schemaVersion = 2;
+const schemaVersion = 3;
 
 // Call once at startup. Tests can supply ':memory:' and a fixed clock.
 export function openDatabase(path = defaultPath, { now = Date.now(), includeDemo = true } = {}) {
@@ -24,11 +24,12 @@ export function openDatabase(path = defaultPath, { now = Date.now(), includeDemo
       if (version === 0) {
         db.exec(schema);
         seedDatabase(db, now, includeDemo);
-      } else if (version !== 1 && version !== schemaVersion) {
+      } else if (version < 1 || version > schemaVersion) {
         throw new Error(`Unsupported LabLink database version: ${version}`);
       }
-      if (version < schemaVersion) {
-        db.exec(credentialsSchema);
+      if (version < 2) db.exec(credentialsSchema);
+      if (version < 3) {
+        expandCatalog(db, now);
         db.exec(`PRAGMA user_version = ${schemaVersion}`);
       }
       db.exec('COMMIT');

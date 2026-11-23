@@ -51,9 +51,18 @@ async function bookingFlow(t, firstApproval) {
   const catalogHtml = await catalog.text();
   assert.match(catalogHtml, /Digital Oscilloscope/);
   assert.match(catalogHtml, /src="\/equipment\/oscilloscope.webp"/);
-  assert.match(catalogHtml, /24\/11\/2026, 17:30 IST to 24\/11\/2026, 19:30 IST/);
+  assert.match(catalogHtml, /3 available slots/);
   assert.doesNotMatch(catalogHtml, /CAD Workstation/);
-  assert.match(catalogHtml, /href="\/requests\?slot=1"/); // A pending request does not hold the slot.
+  assert.match(catalogHtml, /href="\/requests\/choose\?resource=1"/);
+  const filtered = await request('/catalog?q=power&lab=Electronics%20Lab', sam);
+  const matches = await filtered.text();
+  assert.match(matches, /Bench Power Supply/);
+  assert.doesNotMatch(matches, /Digital Oscilloscope|Microcontroller Prototyping Kit/);
+  const picker = await request('/requests/choose?resource=1&date=24%2F11%2F2026', sam);
+  assert.equal(picker.status, 200);
+  const pickerHtml = await picker.text();
+  assert.match(pickerHtml, /<option value="1">17:30–19:30 IST<\/option>/); // Pending does not hold a slot.
+  assert.doesNotMatch(pickerHtml.split('<template')[0], /<option value="2">/);
 
   const form = await request('/requests?slot=1', sam);
   assert.equal(form.status, 200);

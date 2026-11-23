@@ -3,7 +3,7 @@
 **Status:** Approved\
 **Event:** PROMPTWARS 2026\
 **Deliverable:** Public GitHub repository URL\
-**Build target:** Working MVP in **3 hours 15 minutes to 3 hours 30 minutes** of a four-hour event; submit before the **5:00 p.m. hard cutoff**
+**Build target:** Working MVP in **3 hours 15 minutes to 3 hours 30 minutes**; extended submission cutoff **6:00 p.m. IST**
 
 **Source labels:** *Confirmed* means the project owner or organizers supplied the requirement. *Existing* describes the repo at the time of review. *Proposed* marks implementation choices and assumptions from the reviewed draft, rather than organizer requirements.
 
@@ -21,7 +21,7 @@ LabLink brings discovery, project-based access requests, and approvals into one 
 
 **Proposed flow:**
 
-1. Browse or search the catalog by resource name, category, or department. Each resource shows its department, capabilities, and available slots.
+1. Browse or search the catalog by resource name, category, or department, and optionally narrow results by lab. The demo lists nine resources across three labs. A resource opens a slot picker with separate date (`DD/MM/YYYY`) and time (IST) dropdowns; only available times for the chosen date are shown.
 2. Optionally describe a project in plain language. LabLink suggests existing catalog items and explains why they fit. Students can also select equipment directly without using AI.
 3. Choose a resource and preferred slot. Submit a project title or description, deadline, and any equipment requirements. The request starts as **Pending** and does not reserve the slot.
 4. View the request in **My Requests**. See whether it is pending, approved, or declined. If the slot has been taken, see that clearly and choose a suggested alternative if one exists. Requesting the alternative still requires approval.
@@ -110,7 +110,7 @@ Use server-enforced roles. Students can view their own requests; faculty can rev
 - Keep the repository **strictly below 10 MB**, accounting for committed history. Don’t commit dependencies, virtual environments, caches, builds, unnecessary generated files, large assets, or secrets.
 - Ignore sensitive config such as `.env`. If environment variables are required, include `.env.example` with placeholders only.
 - Include `README.md` with the project name and description, problem and solution, key features, stack, installation, run commands, test commands, environment variables, and external services.
-- Submit the **public GitHub URL** before **5:00 p.m.** There are at most **two attempts**. Deployment is not mandatory; if a live demo is deployed, document its URL.
+- Submit the **public GitHub URL** before **6:00 p.m. IST**. There are at most **two attempts**. Deployment is not mandatory; if a live demo is deployed, document its URL.
 
 **Proposed release checks:** Add a reproducible demo walkthrough to the README. Verify public visibility while signed out, confirm the remote has only `main`, check repository size and tracked files, and run the setup and tests from a fresh clone. Check the portal when it opens and use the first submission attempt only after those checks pass.
 

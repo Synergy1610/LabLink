@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Equipment catalog · LabLink</title>
+    <link rel="icon" href="/lablink.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/styles.css">
     <script src="/ai-status.js" defer></script>
   </head>
@@ -13,11 +14,18 @@
       <h1>Equipment catalog</h1>
       <p class="muted">Browse lab equipment, development kits, and workstations across campus.</p>
       <form action="/catalog" method="get" role="search" class="surface stack">
-        <label for="search">Search by name, category, or department</label>
-        <div class="form-row">
-          <input id="search" name="q" type="search" maxlength="100" value="<%= search %>">
-          <button type="submit">Search</button>
-          <% if (search) { %><a class="button outline" href="/catalog">Clear search</a><% } %>
+        <div class="filter-grid">
+          <div><label for="search">Search equipment</label>
+          <input id="search" name="q" type="search" maxlength="100" value="<%= search %>" placeholder="Name, category, or department"></div>
+          <div><label for="lab">Lab</label>
+          <select id="lab" name="lab">
+            <option value="">All labs</option>
+            <% for (const name of labs) { %><option value="<%= name %>"<% if (name === lab) { %> selected<% } %>><%= name %></option><% } %>
+          </select></div>
+        </div>
+        <div class="actions">
+          <button type="submit">Apply filters</button>
+          <% if (search || lab) { %><a class="button outline" href="/catalog">Clear filters</a><% } %>
         </div>
       </form>
       <% if (currentUser.role === 'student') { %>
@@ -37,7 +45,7 @@
             <% if (matches.length) { %>
               <ul>
                 <% for (const match of matches) { %>
-                  <li><a href="#resource-<%= match.resourceId %>"><%= match.name %></a> — <%= match.reason %></li>
+                  <li><a class="button outline" href="#resource-<%= match.resourceId %>"><%= match.name %></a> — <%= match.reason %></li>
                 <% } %>
               </ul>
               <p>Check the catalog below for actual availability. Faculty approval is still required.</p>
@@ -54,20 +62,14 @@
             <small>Representative photo</small>
           <% } %>
           <h2><%= resource.name %></h2>
-          <p><%= resource.department %> · <%= resource.category %></p>
+          <p class="muted"><%= resource.lab %> · <%= resource.category %></p>
           <p><%= resource.description %></p>
           <p><strong>Capabilities:</strong> <%= resource.capabilities %></p>
           <% if (resource.slots.length) { %>
-            <ul class="slots">
-              <% for (const slot of resource.slots) { %>
-                <li>
-                  <%= formatTime(slot.starts_at) %> to <%= formatTime(slot.ends_at) %>
-                  <% if (currentUser.role === 'student') { %>
-                    <a class="button tonal" href="/requests?slot=<%= slot.id %>" aria-label="Request <%= resource.name %> at <%= formatTime(slot.starts_at) %>">Request this slot</a>
-                  <% } %>
-                </li>
-              <% } %>
-            </ul>
+            <p><%= resource.slots.length %> available <%= resource.slots.length === 1 ? 'slot' : 'slots' %></p>
+            <% if (currentUser.role === 'student') { %>
+              <a class="button tonal" href="/requests/choose?resource=<%= resource.id %>" aria-label="Choose a slot for <%= resource.name %>">Choose a slot</a>
+            <% } %>
           <% } else { %><p>No available slots.</p><% } %>
         </article>
       <% } %>

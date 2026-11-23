@@ -1,21 +1,51 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
 import { openDatabase } from './index.js';
+import { seedDatabase } from './seed.js';
 
 const now = Date.UTC(2026, 0, 1);
+
+test('upgrading a v2 database adds the lab catalog without changing existing bookings', (t) => {
+  const directory = mkdtempSync(join(tmpdir(), 'lablink-upgrade-'));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  const path = join(directory, 'lablink.sqlite');
+  const legacy = new DatabaseSync(path);
+  try {
+    legacy.exec(readFileSync(new URL('./schema.sql', import.meta.url), 'utf8'));
+    legacy.exec(readFileSync(new URL('./credentials.sql', import.meta.url), 'utf8'));
+    seedDatabase(legacy, now);
+    legacy.prepare('INSERT INTO bookings (request_id, slot_id, faculty_id, approved_at) VALUES (1, 1, 3, ?)').run(now);
+    legacy.exec("UPDATE requests SET status = 'approved' WHERE id = 1; PRAGMA user_version = 2");
+  } finally {
+    legacy.close();
+  }
+
+  const upgraded = openDatabase(path, { now: now + 60_000 });
+  try {
+    assert.equal(upgraded.prepare('PRAGMA user_version').get().user_version, 3);
+    assert.equal(upgraded.prepare('SELECT COUNT(*) AS n FROM resources').get().n, 9);
+    assert.equal(upgraded.prepare('SELECT request_id FROM bookings WHERE slot_id = 1').get().request_id, 1);
+    assert.equal(upgraded.prepare('SELECT status FROM requests WHERE id = 1').get().status, 'approved');
+    assert.equal(upgraded.prepare('SELECT starts_at FROM slots WHERE id = 1').get().starts_at, now + 86_400_000);
+  } finally {
+    upgraded.close();
+  }
+});
 
 test('demo data has future, non-overlapping slots and a request with no viable alternative', (t) => {
   const db = openDatabase(':memory:', { now });
   t.after(() => db.close());
 
   assert.equal(db.prepare('SELECT COUNT(DISTINCT department) AS count FROM resources').get().count, 3);
+  assert.deepEqual(db.prepare('SELECT COUNT(*) AS count FROM resources GROUP BY lab ORDER BY lab').all().map((row) => row.count), [3, 3, 3]);
   assert.equal(db.prepare('SELECT COUNT(*) AS count FROM users WHERE role = ?').get('student').count, 2);
   assert.equal(db.prepare('SELECT COUNT(*) AS count FROM users WHERE role = ?').get('faculty').count, 1);
   const slots = db.prepare('SELECT * FROM slots ORDER BY resource_id, starts_at').all();
-  assert.equal(slots.length, 7);
+  assert.equal(slots.length, 25);
   for (const [index, slot] of slots.entries()) {
     assert.ok(slot.starts_at > now);
     const previous = slots[index - 1];
@@ -67,7 +97,7 @@ test('reopening the same database preserves demo times and user changes without 
 
   const reopened = openDatabase(path, { now: now + 60_000 });
   try {
-    assert.equal(reopened.prepare('SELECT COUNT(*) AS count FROM slots').get().count, 7);
+    assert.equal(reopened.prepare('SELECT COUNT(*) AS count FROM slots').get().count, 25);
     assert.equal(reopened.prepare('SELECT starts_at FROM slots WHERE id = 1').get().starts_at, startsAt);
     assert.equal(reopened.prepare('SELECT status FROM requests WHERE id = 1').get().status, 'declined');
   } finally {

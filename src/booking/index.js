@@ -15,21 +15,29 @@ export function readId(value) {
   return Number.isSafeInteger(id) ? id : null;
 }
 
-export function findCatalog(db, search, now) {
+export function findCatalog(db, search, now, lab = '') {
   const rows = db.prepare(`
     SELECT r.*, s.id AS slot_id, s.starts_at, s.ends_at
     FROM resources r
     LEFT JOIN slots s ON s.resource_id = r.id AND s.starts_at > ?
       AND NOT EXISTS (SELECT 1 FROM bookings b WHERE b.slot_id = s.id)
-    WHERE instr(lower(r.name || ' ' || r.category || ' ' || r.department), lower(?)) > 0 OR ? = ''
+    WHERE instr(lower(r.name || ' ' || r.category || ' ' || r.department || ' ' || r.lab), lower(?)) > 0
+      AND (? = '' OR r.lab = ?)
     ORDER BY r.name, s.starts_at
-  `).all(now, search, search);
+  `).all(now, search, lab, lab);
   const resources = new Map();
   for (const { slot_id, starts_at, ends_at, ...resource } of rows) {
     if (!resources.has(resource.id)) resources.set(resource.id, { ...resource, slots: [] });
     if (slot_id !== null) resources.get(resource.id).slots.push({ id: slot_id, starts_at, ends_at });
   }
   return [...resources.values()];
+}
+
+export function findOpenResourceSlots(db, resourceId, now) {
+  return db.prepare(`SELECT s.id, s.starts_at, s.ends_at FROM slots s
+    WHERE s.resource_id = ? AND s.starts_at > ?
+      AND NOT EXISTS (SELECT 1 FROM bookings b WHERE b.slot_id = s.id)
+    ORDER BY s.starts_at`).all(resourceId, now);
 }
 
 export function findSlot(db, id) {

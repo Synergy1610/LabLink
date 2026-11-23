@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { requireRole } from '../auth/index.js';
-import { BookingError, findSlot, findStudentRequests, formatTime, readId, submitRequest } from '../booking/index.js';
+import { BookingError, findOpenResourceSlots, findSlot, findStudentRequests, formatTime, readId, submitRequest } from '../booking/index.js';
 import { formatDeadlineFields } from '../booking/time.js';
 import { findAlternatives } from '../scheduling/index.js';
 
@@ -17,6 +17,23 @@ function readField(body, key, limit) {
 export function requestRoutes(db, clock) {
   const router = Router();
   const student = requireRole('student');
+
+  router.get('/requests/choose', student, (req, res) => {
+    const id = readId(req.query.resource);
+    const resource = id && db.prepare('SELECT id, name, lab FROM resources WHERE id = ?').get(id);
+    if (!resource) return res.status(404).type('text').send('Equipment not found.');
+
+    const dates = new Map();
+    for (const slot of findOpenResourceSlots(db, id, clock())) {
+      const start = formatDeadlineFields(slot.starts_at);
+      const end = formatDeadlineFields(slot.ends_at);
+      if (!dates.has(start.deadlineDate)) dates.set(start.deadlineDate, []);
+      const endLabel = end.deadlineDate === start.deadlineDate ? end.deadlineTime : `${end.deadlineDate}, ${end.deadlineTime}`;
+      dates.get(start.deadlineDate).push({ id: slot.id, label: `${start.deadlineTime}–${endLabel} IST` });
+    }
+    const selectedDate = dates.has(req.query.date) ? req.query.date : '';
+    return res.render('requests/choose', { resource, dates, selectedDate });
+  });
 
   function showRequests(req, res, { slotId = null, alternativeFor = null, status = 200, error = null, fields = {} } = {}) {
     const now = clock();

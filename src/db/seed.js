@@ -40,3 +40,28 @@ export function seedDatabase(db, now, includeDemo = true) {
   `).run(1, 1, 1, 'Measure signal timing on a student-built motor controller.',
     now + day + 4 * hour, 'At least two channels for comparing input and output signals.', now);
 }
+
+export function expandCatalog(db, now) {
+  db.exec("ALTER TABLE resources ADD COLUMN lab TEXT NOT NULL DEFAULT 'General Lab'");
+  const labs = ['Electronics Lab', 'Embedded Systems Lab', 'Design & Manufacturing Lab'];
+  const departments = ['Electrical Engineering', 'Computer Engineering', 'Mechanical Engineering'];
+  const setLab = db.prepare('UPDATE resources SET lab = ? WHERE department = ?');
+  departments.forEach((department, i) => setLab.run(labs[i], department));
+  const add = db.prepare(`INSERT INTO resources (name, department, lab, category, description, capabilities)
+    VALUES (?, ?, ?, ?, ?, ?)`);
+  const addSlot = db.prepare('INSERT INTO slots (resource_id, starts_at, ends_at) VALUES (?, ?, ?)');
+  const dayStart = Math.floor((now + 330 * 60_000) / day) * day - 330 * 60_000;
+  for (const [lab, name, category, description, capabilities] of [
+    [0, 'Bench Power Supply', 'Equipment', 'Power circuit prototypes on the bench.', 'Adjustable DC output, current limiting'],
+    [0, 'Function Generator', 'Equipment', 'Generate test signals for circuit experiments.', 'Sine, square, and triangle waveforms'],
+    [1, 'Logic Analyzer', 'Equipment', 'Inspect several digital signals at once.', 'Digital capture, protocol decoding'],
+    [1, 'Soldering Station', 'Workstation', 'Assemble and repair prototype boards.', 'Temperature-controlled iron, fume extraction'],
+    [2, 'FDM 3D Printer', 'Equipment', 'Fabricate small parts from digital models.', 'PLA printing, rapid prototyping'],
+    [2, 'Digital Caliper Set', 'Equipment', 'Measure prototypes and manufactured parts.', 'Inside, outside, and depth measurements'],
+  ]) {
+    const { lastInsertRowid: id } = add.run(name, departments[lab], labs[lab], category, description, capabilities);
+    for (const offset of [day + 10 * hour, day + 14 * hour, 2 * day + 10 * hour]) {
+      addSlot.run(id, dayStart + offset, dayStart + offset + 2 * hour);
+    }
+  }
+}

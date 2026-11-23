@@ -4,24 +4,59 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>LabLink</title>
+    <link rel="icon" href="/lablink.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/styles.css">
   </head>
   <body>
     <%- include('partials/nav') %>
-    <main id="content">
+    <main id="content" class="homepage flow">
       <section class="hero">
-      <p class="eyebrow">LabLink · Campus laboratories</p>
-      <h1>LabLink</h1>
-      <p class="lead">Find the equipment your project needs.</p>
-      <p>Explore instruments across departments, request lab time, and get a fair recommendation when slots overlap.</p>
-      <% if (currentUser) { %>
-        <p><a class="button" href="/catalog">Browse the equipment catalog</a></p>
-        <% if (currentUser.role === 'student') { %><p><a href="/requests">My requests</a></p><% } %>
-        <% if (currentUser.role === 'faculty') { %><p><a href="/faculty">Review booking requests</a></p><% } %>
-        <p><a href="/account">View your demo account</a></p>
-      <% } else { %>
-        <p><a class="button" href="/sign-in"><%= demoMode ? 'Choose a demo role' : 'Sign in with college ID' %></a></p>
-      <% } %>
+        <div class="hero-copy">
+          <p class="eyebrow">LabLink · Campus laboratories</p>
+          <h1>LabLink</h1>
+          <p class="lead">Find the equipment your project needs.</p>
+          <p class="muted">Explore instruments across departments, request lab time, and get a fair recommendation when slots overlap.</p>
+          <div class="actions">
+            <% if (currentUser) { %>
+              <% if (currentUser.role === 'faculty') { %><a class="button" href="/faculty">Booking Requests</a><% } %>
+              <a class="button <%= currentUser.role === 'faculty' ? 'outline' : '' %>" href="/catalog">Browse equipment</a>
+              <% if (currentUser.role === 'student') { %><a class="button outline" href="/requests">My requests</a><% } %>
+            <% } else { %>
+              <a class="button" href="/sign-in"><%= demoMode ? 'Try the demo' : 'Sign in with college ID' %></a>
+            <% } %>
+          </div>
+        </div>
+        <figure class="hero-photo">
+          <img src="/equipment/oscilloscope.webp" alt="Waveforms on a digital oscilloscope" width="500" height="576">
+          <figcaption>Digital oscilloscope · Electronics Lab</figcaption>
+        </figure>
+      </section>
+      <section class="home-section" aria-labelledby="featured-heading">
+        <p class="eyebrow">Campus inventory</p>
+        <h2 id="featured-heading">Featured equipment</h2>
+        <div class="grid">
+          <% for (const item of [
+            { name: 'Digital Oscilloscope', lab: 'Electronics Lab', file: 'oscilloscope' },
+            { name: 'Microcontroller Prototyping Kit', lab: 'Embedded Systems Lab', file: 'kit' },
+            { name: 'CAD Workstation', lab: 'Design & Manufacturing Lab', file: 'workstation' },
+          ]) { %>
+            <article class="resource">
+              <img src="/equipment/<%= item.file %>.webp" alt="" loading="lazy" width="500" height="281">
+              <h3><%= item.name %></h3>
+              <p class="muted"><%= item.lab %></p>
+            </article>
+          <% } %>
+        </div>
+        <p><a class="button outline" href="<%= currentUser ? '/catalog' : '/sign-in' %>"><%= currentUser ? 'Browse the catalog' : 'Sign in to browse' %></a></p>
+      </section>
+      <section class="home-section" aria-labelledby="steps-heading">
+        <p class="eyebrow">How booking works</p>
+        <h2 id="steps-heading">From equipment search to approval</h2>
+        <ol class="grid step-list">
+          <li><strong>Find equipment</strong><p>Search the catalog or filter by lab.</p></li>
+          <li><strong>Request a slot</strong><p>Pick a date and time, then enter your project deadline.</p></li>
+          <li><strong>Get faculty approval</strong><p>Check your request status or pick an alternative if the slot is taken.</p></li>
+        </ol>
       </section>
     </main>
   </body>
