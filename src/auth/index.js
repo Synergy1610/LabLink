@@ -17,10 +17,6 @@ function sessionId(req, name) {
   return /^[0-9a-f]{64}$/.test(value ?? '') ? value : undefined;
 }
 
-function cookieOptions(req) {
-  return { httpOnly: true, sameSite: 'strict', secure: req.secure, path: '/' };
-}
-
 export function requireRole(role) {
   return (req, res, next) => {
     if (!req.user) return res.redirect(303, '/sign-in');
@@ -31,10 +27,12 @@ export function requireRole(role) {
   };
 }
 
-export function createAuth({ db, mode = 'normal', clock = Date.now } = {}) {
+export function createAuth({ db, mode = 'normal', clock = Date.now, hostedDemo = false } = {}) {
   if (!['normal', 'demo'].includes(mode)) throw new Error('Unknown LabLink sign-in mode.');
   const demoMode = mode === 'demo';
+  if (hostedDemo && !demoMode) throw new Error('Hosted access is only available for the demo.');
   if (demoMode && (!db || db.location() !== null)) throw new Error('Demo sign-in requires an in-memory database.');
+  const cookieOptions = (req) => ({ httpOnly: true, sameSite: 'strict', secure: hostedDemo || req.secure, path: '/' });
   const name = demoMode ? `${cookieName}_demo` : cookieName;
   const router = Router();
   const sessions = new Map();
@@ -125,7 +123,7 @@ export function createAuth({ db, mode = 'normal', clock = Date.now } = {}) {
   });
 
   if (demoMode) router.post('/demo/sign-in', (req, res) => {
-    if (!['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress)) return res.sendStatus(404);
+    if (!hostedDemo && !['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress)) return res.sendStatus(404);
     const user = demoUsers.get(req.body?.persona);
     if (!user) return showLogin(req, res, 400, 'Choose a listed demo persona.');
     return signIn(req, res, user);

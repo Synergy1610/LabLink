@@ -7,21 +7,22 @@ import { catalogRoutes } from './routes/catalog.js';
 import { facultyRoutes } from './routes/faculty.js';
 import { requestRoutes } from './routes/requests.js';
 
-export function createApp({ db, authMode, clock = Date.now, gemini = createGeminiClient() } = {}) {
+export function createApp({ db, authMode, clock = Date.now, gemini = createGeminiClient(), hostedDemo = false } = {}) {
   const app = express();
   app.disable('x-powered-by');
+  app.locals.hostedDemo = hostedDemo;
   app.set('view engine', 'ejs');
   app.set('views', fileURLToPath(new URL('../views/', import.meta.url)));
   app.use(express.static(fileURLToPath(new URL('../public/', import.meta.url))));
   app.use(express.urlencoded({ extended: false, limit: '16kb', parameterLimit: 30 }));
 
-  const auth = createAuth({ db, mode: authMode });
+  const auth = createAuth({ db, mode: authMode, hostedDemo });
   app.use(auth.loadSession, auth.verifyCsrf, auth.router);
 
-  const schoolLogos = [
+  const schoolLogos = (hostedDemo ? [] : [
     { name: 'DPS Electronic City', key: 'dps-ecity' },
     { name: 'Greenwood High International School', key: 'greenwood-high' },
-  ].map(({ name, key }) => ({
+  ]).map(({ name, key }) => ({
     name, src: `/branding/${key}.webp`, file: fileURLToPath(new URL(`../data/${key}-logo.webp`, import.meta.url)),
   }));
   for (const logo of schoolLogos) {

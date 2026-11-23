@@ -42,6 +42,19 @@ Equipment is grouped by lab. **Details** expands the descriptions and capabiliti
 - Each request is for one slot on one resource. Faculty make the final decision; the recommendation and Gemini never approve bookings.
 - The app runs locally, binds to `127.0.0.1`, and does not implement campus SSO or public signup.
 
+## Cloud Run demo
+
+The Docker image starts only the public one-click demo. It listens on Cloud Run's assigned `PORT`, does not use private accounts or Gemini, and gives each browser an in-memory sandbox. Sandboxes reset after inactivity or when the service restarts; the demo is not for real bookings.
+
+From a clean clone in Cloud Shell, deploy to a billing-enabled project you control:
+
+```sh
+gcloud run deploy lablink-demo --source . --region asia-south1 \
+  --allow-unauthenticated --min-instances 0 --max-instances 1
+```
+
+Open the resulting HTTPS URL and choose **Try the demo**. Check the student and faculty walkthrough in a private browser window before sharing the link.
+
 The homepage uses the LabLink mark by default. For a local preview, place the DPS Electronic City logo at `data/dps-ecity-logo.webp`. If that file is absent, the app can still use `data/greenwood-high-logo.webp`. Both school-logo previews are labeled unofficial; neither logo is bundled or tracked. Do not redistribute them without permission.
 
 ## Persistent campus setup (optional)

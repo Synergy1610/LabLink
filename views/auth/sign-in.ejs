@@ -14,7 +14,11 @@
       <h1><%= demoMode ? 'Choose a demo role' : 'Sign in to LabLink' %></h1>
       <% if (error) { %><p role="alert"><%= error %></p><% } %>
       <% if (demoMode) { %>
-        <p>No password needed. You can switch roles without losing the current demo bookings. Restart the demo to start over.</p>
+        <% if (hostedDemo) { %>
+          <p>No password needed. Switch roles to try both sides of the booking flow. This demo uses sample data and can reset; please don’t enter personal information.</p>
+        <% } else { %>
+          <p>No password needed. You can switch roles without losing the current demo bookings. Restart the demo to start over.</p>
+        <% } %>
         <form method="post" action="/demo/sign-in" class="surface stack">
           <input type="hidden" name="_csrf" value="<%= csrfToken %>">
           <% for (const user of personas) { %>
