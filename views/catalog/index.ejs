@@ -16,7 +16,7 @@
       <header class="catalog-heading">
         <div>
           <h1>Equipment catalog</h1>
-          <p class="muted"><%= resources.length %> <%= resources.length === 1 ? 'item' : 'items' %><% if (demoMode && resources.length) { %> · Representative photos<% } %></p>
+          <p class="muted"><%= resources.length %> <%= resources.length === 1 ? 'item' : 'items' %><% if (resources.some((resource) => photoFor(resource.id))) { %> · Representative photos<% } %></p>
         </div>
         <div class="actions catalog-toolbar">
           <button type="button" class="tonal" data-open-catalog="catalog-filters" aria-haspopup="dialog" hidden>Use filters</button>
@@ -84,8 +84,9 @@
           <div class="grid catalog-grid">
             <% for (const resource of group.resources) { %>
               <article class="resource catalog-card" id="resource-<%= resource.id %>" tabindex="-1">
-                <% if (demoMode && photoFor(resource.id)) { %>
-                  <img src="<%= photoFor(resource.id).src %>" alt="<%= photoFor(resource.id).alt %>" loading="lazy" width="500" height="281">
+                <% const photo = photoFor(resource.id); %>
+                <% if (photo) { %>
+                  <img src="<%= photo.src %>" alt="<%= photo.alt %>" loading="lazy" width="500" height="281">
                 <% } %>
                 <h3><%= resource.name %></h3>
                 <div class="catalog-availability">

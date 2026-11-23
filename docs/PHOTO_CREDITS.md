@@ -1,4 +1,4 @@
-# Demo equipment photos
+# Equipment photos
 
 These Wikimedia Commons photos are representative, not photographs of the actual campus inventory. The displayed copies were resized and converted to WebP. They are distributed under the terms listed below.
 

@@ -57,6 +57,16 @@ test('normal mode uses provisioned accounts, never trusts a submitted role and t
   const authenticated = readCookie(signedIn);
   assert.notEqual(authenticated, cookie);
   assert.equal((await request('/faculty', authenticated)).status, 403);
+  const catalog = await request('/catalog', authenticated);
+  assert.equal(catalog.status, 200);
+  const catalogHtml = await catalog.text();
+  const photos = [...catalogHtml.matchAll(/src="\/equipment\/([a-z]+\.webp)"/g)].map((match) => match[1]).sort();
+  assert.deepEqual(photos, ['analyzer', 'caliper', 'generator', 'kit', 'oscilloscope', 'printer', 'solder', 'supply', 'workstation'].map((file) => `${file}.webp`));
+  assert.match(catalogHtml, /Representative photos/);
+  assert.match(catalogHtml, /Use filters/);
+  assert.match(catalogHtml, /Find with AI/);
+  assert.match(catalogHtml, /data-slot-dialog/);
+  assert.doesNotMatch(catalogHtml, /Switch role/);
 
   const newForm = await request('/sign-in');
   const newCookie = readCookie(newForm);
