@@ -18,12 +18,19 @@ export function createApp({ db, authMode, clock = Date.now, gemini = createGemin
   const auth = createAuth({ db, mode: authMode });
   app.use(auth.loadSession, auth.verifyCsrf, auth.router);
 
-  const schoolLogo = fileURLToPath(new URL('../data/greenwood-high-logo.webp', import.meta.url));
-  app.get('/branding/greenwood-high.webp', (_req, res, next) => {
-    if (!existsSync(schoolLogo)) return next();
-    return res.sendFile(schoolLogo);
-  });
-  app.get('/', (_req, res) => res.render('index', { hasSchoolLogo: existsSync(schoolLogo) }));
+  const schoolLogos = [
+    { name: 'Dartmouth College', key: 'dartmouth' },
+    { name: 'Greenwood High International School', key: 'greenwood-high' },
+  ].map(({ name, key }) => ({
+    name, src: `/branding/${key}.webp`, file: fileURLToPath(new URL(`../data/${key}-logo.webp`, import.meta.url)),
+  }));
+  for (const logo of schoolLogos) {
+    app.get(logo.src, (_req, res, next) => {
+      if (!existsSync(logo.file)) return next();
+      return res.sendFile(logo.file);
+    });
+  }
+  app.get('/', (_req, res) => res.render('index', { schoolLogo: schoolLogos.find(({ file }) => existsSync(file)) }));
   if (db) app.use(catalogRoutes(db, clock, gemini), requestRoutes(db, clock), facultyRoutes(db, clock, gemini));
   app.use((_req, res) => res.status(404).type('text').send('Page not found.'));
   app.use((error, _req, res, next) => {

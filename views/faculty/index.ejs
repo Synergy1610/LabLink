@@ -18,9 +18,11 @@
       <% for (const { requests, recommendation, aiExplanation } of slotGroups) { %>
         <% const slot = requests[0]; %>
         <section class="queue-item" aria-labelledby="slot-<%= slot.slot_id %>">
-          <header>
-            <h2 id="slot-<%= slot.slot_id %>"><%= slot.resource_name %></h2>
-            <p class="muted"><%= slot.department %></p>
+          <header class="queue-slot">
+            <div>
+              <h2 id="slot-<%= slot.slot_id %>"><%= slot.resource_name %></h2>
+              <p class="muted"><%= slot.department %></p>
+            </div>
             <p class="slot-range"><%= formatSlotRange(slot.starts_at, slot.ends_at) %></p>
           </header>
           <% if (recommendation) { %>
@@ -40,25 +42,37 @@
             <% } %>
             </div>
           <% } %>
-          <div class="grid">
+          <div class="grid queue-candidates">
           <% for (const request of requests) { %>
-             <article class="surface candidate">
-               <h3><%= request.student_name %> · Request #<%= request.id %></h3>
-              <% if (recommendation?.winner.id === request.id) { %><p><span class="badge">Recommended</span></p><% } %>
-              <div class="comparison-facts">
-                <p><strong>Deadline:</strong> <%= formatTime(request.deadline) %></p>
-                <% if (recommendation?.counts.has(request.id)) { %>
-                  <p><strong>Viable alternatives before deadline:</strong> <%= recommendation.counts.get(request.id) %></p>
-                <% } %>
+            <% const recommended = recommendation?.winner.id === request.id; %>
+            <article class="candidate<%= recommended ? ' candidate-recommended' : '' %>" aria-labelledby="request-<%= request.id %>-student">
+              <header class="candidate-header">
+                <img src="/student-avatar.svg" alt="" width="48" height="48">
+                <div class="candidate-identity">
+                  <h3 id="request-<%= request.id %>-student"><%= request.student_name %></h3>
+                  <p class="muted">Request #<%= request.id %></p>
+                </div>
+                <div class="candidate-status">
+                  <span class="badge">Pending</span>
+                  <% if (recommended) { %><span class="badge recommended">Recommended</span><% } %>
+                </div>
+              </header>
+              <div class="candidate-body">
+                <p><strong>Project:</strong> <%= request.project_details %></p>
+                <% if (request.requirements) { %><p><strong>Requirements:</strong> <%= request.requirements %></p><% } %>
+                <div class="comparison-facts">
+                  <p><strong>Deadline:</strong> <%= formatTime(request.deadline) %></p>
+                  <% if (recommendation?.counts.has(request.id)) { %>
+                    <p><strong>Viable alternatives before deadline:</strong> <%= recommendation.counts.get(request.id) %></p>
+                  <% } %>
+                </div>
               </div>
-               <p><strong>Project:</strong> <%= request.project_details %></p>
-              <% if (request.requirements) { %><p><strong>Requirements:</strong> <%= request.requirements %></p><% } %>
               <form method="post" action="/faculty/requests/<%= request.id %>/approve" class="actions decision-actions">
                 <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 <% if (request.booked_request_id === null && request.starts_at > now && request.ends_at <= request.deadline) { %>
                   <button type="submit" aria-label="Approve request <%= request.id %> from <%= request.student_name %>">Approve</button>
                 <% } else { %>
-                  <p>This slot can no longer be approved.</p>
+                   <p class="muted">This slot can no longer be approved.</p>
                 <% } %>
                 <button class="outline" type="submit" formaction="/faculty/requests/<%= request.id %>/decline" aria-label="Decline request <%= request.id %> from <%= request.student_name %>">Decline</button>
               </form>

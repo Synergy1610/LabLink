@@ -22,7 +22,7 @@ Open <http://127.0.0.1:3000/sign-in>. There are no credentials to enter. **Switc
 
 To browse independently, open **Catalog**. **Use filters** opens the search and lab filters, and **Find with AI** opens Gemini equipment matching when signed in as a student. **Choose a slot** opens a dialog; select a date (with its weekday) and an available time (IST), then continue to the booking form. Without JavaScript, browse tools appear inline and slot selection uses a standalone picker.
 
-The homepage uses the LabLink mark by default. For a local preview, place an authorized Greenwood High WebP logo at `data/greenwood-high-logo.webp`. The app labels the preview as unofficial; the logo is not bundled or tracked. Do not redistribute it without permission.
+The homepage uses the LabLink mark by default. For a local preview, the app looks for `data/dartmouth-logo.webp` (a sharper green alternative, sourced from the [Dartmouth Big Green mark](https://commons.wikimedia.org/wiki/File:Dartmouth_College_Big_Green_logo.svg)) before `data/greenwood-high-logo.webp`. Remove the Dartmouth file to use the Greenwood High logo instead. Both previews are labeled unofficial; neither school mark is bundled or tracked. Do not redistribute them without permission.
 
 ## Normal mode: college ID and password
 

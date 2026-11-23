@@ -103,6 +103,8 @@ async function bookingFlow(t, firstApproval) {
   assert.match(queueHtml, /Viable alternatives before deadline:<\/strong> 2/);
   assert.match(queueHtml, /Tue, 24\/11\/2026 · 17:30–19:30 IST/);
   assert.match(queueHtml, /Faculty mode/);
+  assert.equal((queueHtml.match(/src="\/student-avatar.svg"/g) ?? []).length, 2);
+  assert.match(queueHtml, /class="candidate candidate-recommended"[\s\S]*?Anika Rao<\/h3>[\s\S]*?class="badge recommended">Recommended/);
   const decisionFields = { _csrf: await csrfFrom(queue) };
   if (firstApproval === 1) {
     assert.equal(aiRequests.length, 0); // Loading the queue does not call Gemini.
